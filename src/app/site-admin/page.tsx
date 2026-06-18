@@ -125,7 +125,7 @@ export default function SiteAdminPage() {
     } else if (type === 'testimonial') {
       url = '/api/testimonials'; body = { id, quote: form.quote, name: form.name, role: form.role, country: form.country, image_url: form.image_url || '', is_featured: form.is_featured === 'true' };
     } else if (type === 'account') {
-      url = '/api/accounts'; body = { email: form.email, full_name: form.full_name, role: form.role, temp_password: form.temp_password, assigned_to: form.assigned_to || '' };
+      url = '/api/accounts'; body = { email: form.email, full_name: form.full_name, role: form.role || 'TEAM_MEMBER', temp_password: form.temp_password, assigned_to: form.assigned_to || '' };
     } else if (type === 'transfer_lead') {
       url = '/api/leads'; body = { action: 'transfer', lead_id: form.lead_id, new_owner_id: form.new_owner_id, new_owner_name: teamOptions.find((t: Record<string, unknown>) => t.id === form.new_owner_id)?.full_name || '' };
     }
