@@ -133,7 +133,7 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
     const keys = fields.map(f => `digital_profile:${userId}:${f}`);
     // Delete existing rows first, then insert fresh ones
     await c.from('settings').delete().in('key', keys);
-    const rows = fields.map(f => ({ key: `digital_profile:${userId}:${f}`, value: (data[f] || '').slice(0, 255) }));
+    const rows = fields.map(f => ({ key: `digital_profile:${userId}:${f}`, value: (data[f] || '') }));
     await c.from('settings').insert(rows);
     return true;
   } catch { return false; }

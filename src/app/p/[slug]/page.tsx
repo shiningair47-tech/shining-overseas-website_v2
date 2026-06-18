@@ -188,10 +188,14 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
                   ))}
                   <div style={{ marginBottom: 24 }}>
                     <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Country of Interest</label>
-                    <select name="country" style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, appearance: 'none' }}>
+                    <select name="country" onChange={e => setShowOtherCountry(e.target.value === "Other")} style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, appearance: 'none' }}>
                       <option value="">Select a country</option>
                       {['Saudi Arabia', 'Malaysia', 'UAE', 'Qatar', 'Kuwait', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+                  {showOtherCountry && (
+                    <input name="other_country" type="text" placeholder="Type your country..." value={otherCountry} onChange={e => setOtherCountry(e.target.value)} style={{ width: "100%", padding: "12px 0", marginTop: 12, borderTop: "none", borderLeft: "none", borderRight: "none", borderBottom: "1px solid rgba(0,13,16,0.15)", background: "transparent", fontSize: 15, color: "#000d10", fontWeight: 500, boxSizing: "border-box" }} />
+                  )}
+
                   </div>
                   <div style={{ marginBottom: 24, padding: '16px', background: '#f8f8f9', border: '1px solid rgba(0,13,16,0.08)' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
