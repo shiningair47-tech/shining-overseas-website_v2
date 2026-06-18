@@ -19,6 +19,8 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [otherCountry, setOtherCountry] = useState('');
+  const [showOtherCountry, setShowOtherCountry] = useState(false);
 
   useEffect(() => {
     fetch(`/api/public-profile/${slug}`)
@@ -43,7 +45,7 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'submit', full_name: name, phone_number: phone,
-          country: fd.get('country') || '', source: `profile:${slug}`,
+          country: showOtherCountry ? otherCountry : (fd.get('country') as string || ''), source: `profile:${slug}`,
           owner_user: ownerUser, has_visit_date: hasVisitDate,
           visit_date: fd.get('visit_date') || '', message: fd.get('message') || '',
         }),

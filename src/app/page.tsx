@@ -40,6 +40,8 @@ export default function HomePage() {
   const [formError, setFormError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
+  const [otherCountry, setOtherCountry] = useState('');
+  const [showOtherCountry, setShowOtherCountry] = useState(false);
 
   useEffect(() => {
     fetch('/api/site-settings').then(r => r.json()).then(setSettings).catch(() => {});
@@ -73,7 +75,7 @@ export default function HomePage() {
     try {
       const res = await fetch('/api/leads', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'submit', full_name: name, phone_number: phone, country: fd.get('country') || '', source: 'homepage', owner_user: null, has_visit_date: false, visit_date: '', message: fd.get('message') || '' }),
+        body: JSON.stringify({ action: 'submit', full_name: name, phone_number: phone, country: showOtherCountry ? otherCountry : (fd.get('country') as string || ''), source: 'homepage', owner_user: null, has_visit_date: false, visit_date: '', message: fd.get('message') || '' }),
       });
       const data = await res.json();
       if (data.ok) { setFormSubmitted(true); (e.target as HTMLFormElement).reset(); }
@@ -435,10 +437,13 @@ export default function HomePage() {
                   ))}
                   <div style={{ marginBottom: 24 }}>
                     <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Country of Interest</label>
-                    <select name="country" style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, appearance: 'none' }}>
+                    <select name="country" onChange={e => setShowOtherCountry(e.target.value === 'Other')} style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, appearance: 'none' }}>
                       <option value="">Select a country</option>
                       {['Saudi Arabia', 'Malaysia', 'UAE', 'Qatar', 'Kuwait', 'Other'].map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
+                    {showOtherCountry && (
+                      <input name="other_country" type="text" placeholder="Type your country..." value={otherCountry} onChange={e => setOtherCountry(e.target.value)} style={{ width: '100%', padding: '12px 0', marginTop: 12, borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                    )}
                   </div>
                   <div style={{ marginBottom: 32 }}>
                     <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Message (optional)</label>
