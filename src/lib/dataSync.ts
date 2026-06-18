@@ -114,12 +114,35 @@ export async function loadProfileMetadata(userId: string) {
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
   const out: Record<string, string> = { photo_url: '', uploaded_photo: '', whatsapp_1: '', whatsapp_2: '', whatsapp_3: '' };
   const c = getSupabaseClient(); if (!c) return out;
-  const keys = fields.map(f => `digital_profile:${userId}:${f}`);
   try {
-    const { data } = await c.from('settings').select('key,value').in('key', keys);
-    for (const row of data || []) {
-      for (const f of fields) {
-        if (row.key === `digital_profile:${userId}:${f}`) { out[f] = row.value || ''; break; }
+    // Load ALL settings keys for this user at once
+    const prefix = `digital_profile:${userId}:`;
+    const { data } = await c.from('settings').select('key,value').like('key', `${prefix}%`);
+    if (!data) return out;
+    
+    // Group rows by field name
+    const grouped: Record<string, { chunk?: number; value: string }[]> = {};
+    for (const row of data) {
+      const remainder = row.key.substring(prefix.length); // e.g. "uploaded_photo:0" or "uploaded_photo" or "uploaded_photo:count"
+      const parts = remainder.split(':');
+      const field = parts[0];
+      if (!fields.includes(field)) continue;
+      if (!grouped[field]) grouped[field] = [];
+      if (parts.length === 1) {
+        // Direct value
+        out[field] = row.value || '';
+      } else if (parts[1] !== 'count') {
+        // Chunked value
+        grouped[field].push({ chunk: parseInt(parts[1], 10), value: row.value || '' });
+      }
+    }
+    
+    // Reassemble chunked values
+    for (const f of fields) {
+      const chunks = grouped[f];
+      if (chunks && chunks.length > 0) {
+        chunks.sort((a, b) => (a.chunk || 0) - (b.chunk || 0));
+        out[f] = chunks.map(c => c.value).join('');
       }
     }
   } catch {}
@@ -130,11 +153,29 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
   const c = getSupabaseClient(); if (!c) return false;
   try {
-    const keys = fields.map(f => `digital_profile:${userId}:${f}`);
-    // Delete existing rows first, then insert fresh ones
-    await c.from('settings').delete().in('key', keys);
-    const rows = fields.map(f => ({ key: `digital_profile:${userId}:${f}`, value: (data[f] || '') }));
-    await c.from('settings').insert(rows);
+    for (const f of fields) {
+      const value = data[f] || '';
+      const prefix = `digital_profile:${userId}:${f}`;
+      
+      // Delete old rows for this field (direct + chunks) - single call
+      await c.from('settings').delete().like('key', `${prefix}%`);
+      
+      if (value.length <= 255) {
+        // Short value - store directly
+        await c.from('settings').insert([{ key: prefix, value }]);
+      } else {
+        // Long value (e.g. base64 photo) - split into 200-char chunks
+        const chunkSize = 200;
+        const chunks: string[] = [];
+        for (let i = 0; i < value.length; i += chunkSize) {
+          chunks.push(value.substring(i, i + chunkSize));
+        }
+        // Batch all chunk rows into a single insert
+        const rows = chunks.map((chunk, i) => ({ key: `${prefix}:${i}`, value: chunk }));
+        rows.push({ key: `${prefix}:count`, value: chunks.length.toString() });
+        await c.from('settings').insert(rows);
+      }
+    }
     return true;
   } catch { return false; }
 }
