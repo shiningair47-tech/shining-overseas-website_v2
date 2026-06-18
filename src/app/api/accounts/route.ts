@@ -1,56 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAccount } from '@/lib/dataSync';
-import { getSession } from '@/lib/auth';
+import { fetchUserById } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the current admin's session
-    const session = await getSession();
-    if (!session || !session.user) {
+    // Server-side auth: validate from x-user-id header
+    const userId = request.headers.get('x-user-id');
+    if (!userId) {
       return NextResponse.json(
-        { error: 'Unauthorized - Please log in' },
+        { ok: false, msg: 'Unauthorized - no user context', temp_password: '' },
         { status: 401 }
       );
     }
 
-    // Only admins can create accounts
-    if (session.user.role !== 'admin') {
+    const adminUser = await fetchUserById(userId);
+    if (!adminUser || adminUser.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Forbidden - Only admins can create accounts' },
+        { ok: false, msg: 'Forbidden - only admins can create accounts', temp_password: '' },
         { status: 403 }
       );
     }
 
     const body = await request.json();
-    const { full_name, email, role, temp_password } = body;
+    const { full_name, email, role, temp_password, assigned_to } = body;
 
     // Validate required fields
     if (!full_name || !email || !role) {
       return NextResponse.json(
-        { error: 'Missing required fields: full_name, email, role' },
+        { ok: false, msg: 'Missing required fields: full_name, email, role', temp_password: '' },
         { status: 400 }
       );
     }
 
-    // If creating a staff account, assign to the current admin
-    let assigned_to = undefined;
-    if (role === 'staff') {
-      assigned_to = session.user.id;
-    }
-
-    const result = await createAccount({
-      full_name,
+    const [ok, msg, tempPassword] = await createAccount(
       email,
+      full_name,
       role,
-      temp_password: temp_password || undefined,
-      assigned_to,
-    });
+      temp_password || '',
+      assigned_to || ''
+    );
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json(
+      { ok, msg, temp_password: tempPassword },
+      { status: ok ? 201 : 400 }
+    );
   } catch (error) {
     console.error('Create account error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create account' },
+      { ok: false, msg: error instanceof Error ? error.message : 'Failed to create account', temp_password: '' },
       { status: 500 }
     );
   }

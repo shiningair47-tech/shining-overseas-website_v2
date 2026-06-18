@@ -1,9 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { loadProfileMetadata } from '@/lib/dataSync';
 
-export async function GET(req: Request, { params }: { params: { slug: string } }) {
-  const { slug } = params;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
   const c = getSupabaseClient();
   if (!c) return NextResponse.json({ error: 'No DB' }, { status: 500 });
   try {

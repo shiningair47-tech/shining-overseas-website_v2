@@ -131,7 +131,7 @@ export default function SiteAdminPage() {
     }
 
     try {
-      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(user ? { 'x-user-id': user.id } : {}) }, body: JSON.stringify(body) });
       const data = await res.json();
       if (data.ok || data.temp_password) {
         let msg = 'Saved!';
