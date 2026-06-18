@@ -16,37 +16,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { action } = body;
   if (action === 'save_profile') {
-    const data = { ...body.data };
-    const c = getSupabaseClient();
-
-    // Upload base64 photo to Supabase Storage (avoids column size limits)
-    if (c && data.uploaded_photo && data.uploaded_photo.startsWith('data:image/')) {
-      try {
-        const bucket = 'digital-profiles';
-        // Ensure bucket exists (ignore error if already exists)
-        await c.storage.createBucket(bucket, { public: true }).catch(() => {});
-
-        const match = data.uploaded_photo.match(/^data:image\/(\w+);base64,(.+)$/);
-        if (match) {
-          const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
-          const buffer = Buffer.from(match[2], 'base64');
-          const filePath = `${body.user_id}/profile.${ext}`;
-
-          await c.storage.from(bucket).upload(filePath, buffer, {
-            contentType: `image/${match[1]}`,
-            upsert: true,
-          });
-
-          const { data: { publicUrl } } = c.storage.from(bucket).getPublicUrl(filePath);
-          data.photo_url = publicUrl;
-          data.uploaded_photo = ''; // Clear raw base64, store URL instead
-        }
-      } catch {
-        // Storage failed – fall through, saveProfileMetadata will handle via chunking
-      }
-    }
-
-    const ok = await saveProfileMetadata(body.user_id, data);
+    const ok = await saveProfileMetadata(body.user_id, body.data);
     return NextResponse.json({ ok });
   }
   if (action === 'update_user') {

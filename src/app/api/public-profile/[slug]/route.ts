@@ -16,6 +16,8 @@ export async function GET(
     const user = data?.[0];
     if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     const meta = await loadProfileMetadata(user.id);
-    return NextResponse.json({ user, meta });
+    return NextResponse.json({ user, meta }, {
+      headers: { 'Cache-Control': 'no-store, max-age=0, must-revalidate' },
+    });
   } catch { return NextResponse.json({ error: 'Server error' }, { status: 500 }); }
 }
