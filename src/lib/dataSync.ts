@@ -162,7 +162,7 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
       
       if (value.length <= 255) {
         // Short value - store directly
-        await c.from('settings').insert([{ key: prefix, value }]);
+        await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
       } else {
         // Long value (e.g. base64 photo) - split into 200-char chunks
         const chunkSize = 200;
@@ -173,7 +173,7 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
         // Batch all chunk rows into a single insert
         const rows = chunks.map((chunk, i) => ({ key: `${prefix}:${i}`, value: chunk }));
         rows.push({ key: `${prefix}:count`, value: chunks.length.toString() });
-        await c.from('settings').insert(rows);
+        await c.from('settings').upsert(rows, { onConflict: 'key' });
       }
     }
     return true;

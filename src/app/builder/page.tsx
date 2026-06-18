@@ -57,12 +57,39 @@ export default function BuilderPage() {
     setLoading(false);
   }, [router]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const resizeImage = (dataUrl: string, maxSz: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxSz || h > maxSz) {
+          const ratio = Math.min(maxSz / w, maxSz / h);
+          w = Math.round(w * ratio); h = Math.round(h * ratio);
+        }
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx?.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadLoading(true);
     const reader = new FileReader();
-    reader.onload = ev => { setUploadedPhoto(ev.target?.result as string || ''); setUploadLoading(false); };
+    reader.onload = async ev => {
+      try {
+        const full = ev.target?.result as string || '';
+        const resized = await resizeImage(full, 480);
+        setUploadedPhoto(resized);
+      } catch { setMsg('Failed to process image.'); }
+      setUploadLoading(false);
+    };
     reader.onerror = () => { setMsg('Failed to read file.'); setUploadLoading(false); };
     reader.readAsDataURL(file);
   };
@@ -71,14 +98,17 @@ export default function BuilderPage() {
     if (!user) return;
     setSaving(true); setMsg('');
     try {
-      await fetch('/api/digital-id', {
+      const r1 = await fetch('/api/digital-id', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_user', user_id: user.id, full_name: fullName, phone_number: phone, facebook_page: facebook }),
       });
-      await fetch('/api/digital-id', {
+      if (!r1.ok) { setMsg('Failed to update user info.'); setSaving(false); return; }
+      const r2 = await fetch('/api/digital-id', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'save_profile', user_id: user.id, data: { photo_url: photoUrl, uploaded_photo: uploadedPhoto, whatsapp_1: wa1, whatsapp_2: wa2, whatsapp_3: wa3 } }),
       });
+      const r2d = await r2.json();
+      if (!r2.ok || !r2d.ok) { setMsg('Failed to save profile. The photo may be too large - try a smaller image.'); setSaving(false); return; }
       const updated = { ...user, full_name: fullName, phone_number: phone, facebook_page: facebook };
       localStorage.setItem('so_user', JSON.stringify(updated));
       setUser(updated); setSaved(true); setMsg('Your Digital ID has been published!');
