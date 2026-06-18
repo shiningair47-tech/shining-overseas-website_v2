@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAccount } from '@/lib/dataSync';
+import { createAccount, listAccounts, listTeamMemberOptions } from '@/lib/dataSync';
 import { fetchUserById } from '@/lib/auth';
+
+export async function GET(request: NextRequest) {
+  // Check if requesting team member options for dropdown
+  const isTeamOptions = request.nextUrl.searchParams.get('teamOptions') === 'true';
+
+  if (isTeamOptions) {
+    const members = await listTeamMemberOptions();
+    return NextResponse.json(members);
+  }
+
+  const accounts = await listAccounts();
+  return NextResponse.json(accounts);
+}
 
 export async function POST(request: NextRequest) {
   try {
