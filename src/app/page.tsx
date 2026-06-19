@@ -19,7 +19,7 @@ const DEMO_FLIGHTS: Flight[] = [
 ];
 
 const DEFAULT_SETTINGS: SiteSettings = {
-  hero_badge: 'BAIRA LICENSED · REG. NO. RL-2716', hero_heading: 'Your trusted gateway to ', hero_heading_accent: 'global opportunity',
+  hero_badge: 'BAIRA LICENSED · REG. NO. RL-2716', hero_heading: 'YOUR TRUSTED WAY TO ', hero_heading_accent: 'GLOBAL OPPORTUNITY',
   hero_paragraph: 'BAIRA-licensed overseas recruitment for Bangladeshi workers. Saudi Arabia, Malaysia, UAE, Qatar, Kuwait — handled end to end with verified employers, sharp execution, and full compliance.',
   hero_cta_primary: 'Get Free Consultation', hero_cta_secondary: 'View Active Circulars',
   stat_1_value: '12,000+', stat_1_label: 'Workers Placed', stat_2_value: '15+', stat_2_label: 'Years of Trust',
