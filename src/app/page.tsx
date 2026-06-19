@@ -490,8 +490,8 @@ export default function HomePage() {
               </h2>
               <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#d5d3d4', lineHeight: 1.6, fontWeight: 500, maxWidth: 400, marginBottom: 48 }}>{s.contact_paragraph}</p>
               {[['01', 'Office', s.contact_office], ['02', 'Hotline', s.contact_hotline], ['03', 'Email', s.contact_email], ['04', 'Hours', s.contact_hours]].map(([num, label, value]) => (
-                <div key={num} style={{ display: 'flex', gap: 16, padding: '28px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, flexShrink: 0, paddingTop: 4, width: 48 }}>{num}</div>
+                <div key={num} style={{ display: 'flex', gap: 16, padding: '28px 0', borderTop: '1px solid rgba(255,255,255,0.1)', alignItems: 'flex-start' }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, flexShrink: 0, width: 48 }}>{num}</div>
                   <div>
                     <div style={{ fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
                     <div style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: 'white', fontWeight: 700 }}>{value}</div>
