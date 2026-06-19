@@ -85,7 +85,7 @@ export default function BuilderPage() {
     reader.onload = async ev => {
       try {
         const full = ev.target?.result as string || '';
-        const resized = await resizeImage(full, 480);
+        const resized = await resizeImage(full, 240);
         setUploadedPhoto(resized);
       } catch { setMsg('Failed to process image.'); }
       setUploadLoading(false);

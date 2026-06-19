@@ -26,6 +26,7 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
   const [visitOfficeError, setVisitOfficeError] = useState('');
   const [visitOfficeLoading, setVisitOfficeLoading] = useState(false);
   const [selectedVisitDate, setSelectedVisitDate] = useState('');
+  const [photoError, setPhotoError] = useState(false);
 
   const getNext10Days = () => {
     const days: { label: string; iso: string }[] = [];
@@ -119,7 +120,7 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
   );
 
   const { user, meta } = profile;
-  const photoSrc = meta.uploaded_photo || meta.photo_url || '';
+  const photoSrc = !photoError ? (meta.uploaded_photo || meta.photo_url || '') : '';
   const initials = user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const isTeam = user.role === 'TEAM_MEMBER';
   const specialty = isTeam ? 'Staff Representative' : 'Brand Ambassador';
@@ -174,7 +175,7 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
             <div style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{ position: 'relative', width: 240, height: 240 }}>
                 {photoSrc ? (
-                  <img src={photoSrc} alt={user.full_name} style={{ width: 240, height: 240, objectFit: 'cover', borderRadius: 0, border: '2px solid rgba(188,113,85,0.4)' }} />
+                  <img src={photoSrc} alt={user.full_name} onError={() => setPhotoError(true)} style={{ width: 240, height: 240, objectFit: 'cover', borderRadius: 0, border: '2px solid rgba(188,113,85,0.4)' }} />
                 ) : (
                   <div style={{ width: 240, height: 240, background: '#151623', border: '2px solid rgba(188,113,85,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 64, fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{initials}</span>
