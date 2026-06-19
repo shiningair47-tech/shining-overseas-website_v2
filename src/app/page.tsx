@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Plane, ArrowRight, ChevronDown, Menu, X, Inbox, CircleAlert, CircleCheck } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────

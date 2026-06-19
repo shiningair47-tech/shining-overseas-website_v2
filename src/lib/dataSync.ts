@@ -2,7 +2,6 @@ import { getSupabaseClient } from './supabase';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import secrets from 'crypto';
 
 // ---- ACCOUNT HELPERS ----
 function generateTempPassword(length = 12): string {
