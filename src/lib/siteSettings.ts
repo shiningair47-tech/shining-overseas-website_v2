@@ -29,6 +29,19 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   about_body_2: 'Every worker we place is supported through medical, training, visa processing, and post-deployment care. We don\'t take shortcuts — and we don\'t charge what we don\'t deliver.',
   footer_headline: 'Your trusted gateway to global opportunity.',
   footer_description: 'BAIRA-licensed overseas recruitment agency placing skilled Bangladeshi workers across the Gulf and Southeast Asia since 2009.',
+  contact_label: 'GET CONSULTATION',
+  contact_heading_1: 'Talk to a',
+  contact_heading_2: 'licensed advisor',
+  contact_heading_3_acc: 'today.',
+  contact_paragraph: 'Free consultation. No commitment. Our team responds within 24 hours.',
+  contact_office: 'Plot 47, Road 11, Banani, Dhaka 1213',
+  contact_hotline: '+880 1700-000000',
+  contact_email: 'info@shiningoverseas.com',
+  contact_hours: 'Sat–Thu, 9:00 AM – 6:00 PM',
+  contact_visit_heading: 'Schedule a visit.',
+  contact_visit_desc: "Enter your phone and pick a date — we'll register you as a hot lead instantly.",
+  contact_form_label: 'REQUEST FORM',
+  contact_form_title: 'Start your journey.',
 };
 
 export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);

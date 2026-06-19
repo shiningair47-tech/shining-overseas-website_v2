@@ -24,6 +24,19 @@ const DEFAULT_SETTINGS: SiteSettings = {
   about_body_2: "Every worker we place is supported through medical, training, visa processing, and post-deployment care. We don't take shortcuts — and we don't charge what we don't deliver.",
   footer_headline: 'Your trusted gateway to global opportunity.',
   footer_description: 'BAIRA-licensed overseas recruitment agency placing skilled Bangladeshi workers across the Gulf and Southeast Asia since 2009.',
+  contact_label: 'GET CONSULTATION',
+  contact_heading_1: 'Talk to a',
+  contact_heading_2: 'licensed advisor',
+  contact_heading_3_acc: 'today.',
+  contact_paragraph: 'Free consultation. No commitment. Our team responds within 24 hours.',
+  contact_office: 'Plot 47, Road 11, Banani, Dhaka 1213',
+  contact_hotline: '+880 1700-000000',
+  contact_email: 'info@shiningoverseas.com',
+  contact_hours: 'Sat–Thu, 9:00 AM – 6:00 PM',
+  contact_visit_heading: 'Schedule a visit.',
+  contact_visit_desc: "Enter your phone and pick a date — we'll register you as a hot lead instantly.",
+  contact_form_label: 'REQUEST FORM',
+  contact_form_title: 'Start your journey.',
 };
 
 export default function HomePage() {
@@ -445,13 +458,13 @@ export default function HomePage() {
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 40 }}>
                 <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
-                <span style={{ fontSize: 11, letterSpacing: '0.25em', color: 'white', fontWeight: 700 }}>GET CONSULTATION</span>
+                <span style={{ fontSize: 11, letterSpacing: '0.25em', color: 'white', fontWeight: 700 }}>{s.contact_label}</span>
               </div>
               <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: 'white', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>
-                Talk to a<br />licensed advisor<br /><span style={{ color: '#bc7155' }}>today.</span>
+                {s.contact_heading_1}<br />{s.contact_heading_2}<br /><span style={{ color: '#bc7155' }}>{s.contact_heading_3_acc}</span>
               </h2>
-              <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#d5d3d4', lineHeight: 1.6, fontWeight: 500, maxWidth: 400, marginBottom: 48 }}>Free consultation. No commitment. Our team responds within 24 hours.</p>
-              {[['01', 'Office', 'Plot 47, Road 11, Banani, Dhaka 1213'], ['02', 'Hotline', '+880 1700-000000'], ['03', 'Email', 'info@shiningoverseas.com'], ['04', 'Hours', 'Sat–Thu, 9:00 AM – 6:00 PM']].map(([num, label, value]) => (
+              <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#d5d3d4', lineHeight: 1.6, fontWeight: 500, maxWidth: 400, marginBottom: 48 }}>{s.contact_paragraph}</p>
+              {[['01', 'Office', s.contact_office], ['02', 'Hotline', s.contact_hotline], ['03', 'Email', s.contact_email], ['04', 'Hours', s.contact_hours]].map(([num, label, value]) => (
                 <div key={num} style={{ display: 'flex', gap: 16, padding: '28px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, flexShrink: 0, paddingTop: 4, width: 48 }}>{num}</div>
                   <div>
@@ -466,8 +479,8 @@ export default function HomePage() {
               <div style={{ background: '#151623', padding: 'clamp(28px, 3vw, 36px)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 32 }}>
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, marginBottom: 12 }}>VISIT OFFICE</div>
-                  <h3 style={{ fontSize: 'clamp(20px,2.5vw,26px)', fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>Schedule a visit.</h3>
-                  <p style={{ fontSize: 14, color: '#d5d3d4', fontWeight: 500, marginTop: 8, lineHeight: 1.5 }}>Enter your phone and pick a date — we&apos;ll register you as a hot lead instantly.</p>
+                  <h3 style={{ fontSize: 'clamp(20px,2.5vw,26px)', fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>{s.contact_visit_heading}</h3>
+                  <p style={{ fontSize: 14, color: '#d5d3d4', fontWeight: 500, marginTop: 8, lineHeight: 1.5 }}>{s.contact_visit_desc}</p>
                 </div>
                 <div style={{ marginBottom: 24 }}>
                   <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Your Phone Number</label>
@@ -510,8 +523,8 @@ export default function HomePage() {
               </div>
               <div style={{ background: 'white', padding: 'clamp(32px, 4vw, 40px)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 <div style={{ marginBottom: 32, paddingBottom: 32, borderBottom: '1px solid rgba(0,13,16,0.1)' }}>
-                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, marginBottom: 12 }}>REQUEST FORM</div>
-                  <h3 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 700, color: '#000d10', letterSpacing: '-0.02em' }}>Start your journey.</h3>
+                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, marginBottom: 12 }}>{s.contact_form_label}</div>
+                  <h3 style={{ fontSize: 'clamp(20px, 2.5vw, 28px)', fontWeight: 700, color: '#000d10', letterSpacing: '-0.02em' }}>{s.contact_form_title}</h3>
                 </div>
                 <form onSubmit={handleContactSubmit}>
                   {[['Full Name', 'name', 'text', 'Your name'], ['Phone Number', 'phone', 'tel', '+880 1XXX-XXXXXX']].map(([label, name, type, placeholder]) => (
