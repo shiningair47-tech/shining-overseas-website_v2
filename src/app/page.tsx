@@ -721,13 +721,12 @@ export default function HomePage() {
     margin-right: auto !important;
   }
 
-  /* Contact info rows centering (Office, Hotline, Email, Hours) */
+  /* Contact info rows: center the whole row on page, keep text left-aligned */
   .section-contact .section-inner > div:first-child > div:first-child > h2 + p ~ div {
     justify-content: center !important;
-    text-align: center;
   }
   .section-contact .section-inner > div:first-child > div:first-child > h2 + p ~ div > div:last-child {
-    text-align: left;
+    text-align: left !important;
   }
 
   /* Reduce section padding on mobile */
