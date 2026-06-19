@@ -46,7 +46,7 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
 
 export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
 
-export async function loadSiteSettings(): Promise<Record<string, string>> {
+export  async function loadSiteSettings(): Promise<Record<string, string>> {
   const out: Record<string, string> = { ...DEFAULT_SETTINGS };
   const client = getSupabaseClient();
   if (!client) return out;
@@ -68,6 +68,10 @@ export async function loadSiteSettings(): Promise<Record<string, string>> {
         }
       }
     }
+    // Force correct hero heading text — DB has stale misspelled values
+    // ("YOUR TRUSTED WAY TO" without trailing space and "GLOBAL OPPOURTUNITY" misspelled)
+    out['hero_heading'] = DEFAULT_SETTINGS['hero_heading'];
+    out['hero_heading_accent'] = DEFAULT_SETTINGS['hero_heading_accent'];
   } catch {}
   return out;
 }
