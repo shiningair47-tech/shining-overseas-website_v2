@@ -154,8 +154,9 @@ export async function loadProfileMetadata(userId: string) {
       }
     }
     
-    // Reassemble chunked values
+    // Reassemble chunked values — only if no direct value already set
     for (const f of fields) {
+      if (out[f]) continue; // direct value takes precedence
       const chunks = grouped[f];
       if (chunks && chunks.length > 0) {
         chunks.sort((a, b) => (a.chunk || 0) - (b.chunk || 0));
@@ -174,24 +175,11 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
       const value = data[f] || '';
       const prefix = `digital_profile:${userId}:${f}`;
       
-      // Delete old rows for this field (direct + chunks) - single call
+      // Delete old rows for this field (both old chunked format and single-row format)
       await c.from('settings').delete().like('key', `${prefix}%`);
       
-      if (value.length <= 255) {
-        // Short value - store directly
-        await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
-      } else {
-        // Long value (e.g. base64 photo) - split into 200-char chunks
-        const chunkSize = 200;
-        const chunks: string[] = [];
-        for (let i = 0; i < value.length; i += chunkSize) {
-          chunks.push(value.substring(i, i + chunkSize));
-        }
-        // Batch all chunk rows into a single insert
-        const rows = chunks.map((chunk, i) => ({ key: `${prefix}:${i}`, value: chunk }));
-        rows.push({ key: `${prefix}:count`, value: chunks.length.toString() });
-        await c.from('settings').upsert(rows, { onConflict: 'key' });
-      }
+      // Store as a single row — text column supports up to 1GB
+      await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
     }
     return true;
   } catch { return false; }
