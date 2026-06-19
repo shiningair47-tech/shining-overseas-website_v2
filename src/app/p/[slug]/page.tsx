@@ -21,6 +21,25 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
   const [formLoading, setFormLoading] = useState(false);
   const [otherCountry, setOtherCountry] = useState('');
   const [showOtherCountry, setShowOtherCountry] = useState(false);
+  const [visitOfficePhone, setVisitOfficePhone] = useState('');
+  const [visitOfficeSubmitted, setVisitOfficeSubmitted] = useState(false);
+  const [visitOfficeError, setVisitOfficeError] = useState('');
+  const [visitOfficeLoading, setVisitOfficeLoading] = useState(false);
+  const [selectedVisitDate, setSelectedVisitDate] = useState('');
+
+  const getNext10Days = () => {
+    const days: { label: string; iso: string }[] = [];
+    const today = new Date();
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const weekday = d.toLocaleDateString('en-US', { weekday: 'short' });
+      const day = d.getDate();
+      const month = d.toLocaleDateString('en-US', { month: 'short' });
+      days.push({ label: `${weekday} ${day} ${month}`, iso: d.toISOString().split('T')[0] });
+    }
+    return days;
+  };
 
   useEffect(() => {
     fetch(`/api/public-profile/${slug}`)
@@ -28,6 +47,30 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
       .then(d => { if (d) setProfile(d); setLoading(false); })
       .catch(() => { setNotFound(true); setLoading(false); });
   }, [slug]);
+
+  const handleVisitOfficeSubmit = async (date: string) => {
+    const phone = visitOfficePhone.trim();
+    if (!phone) { setVisitOfficeError('Please enter your phone number.'); return; }
+    setVisitOfficeLoading(true); setVisitOfficeError('');
+    const ownerUser = profile ? {
+      id: profile.user.id, role: profile.user.role, full_name: profile.user.full_name,
+      referral_code: profile.user.referral_code, assigned_to: profile.user.assigned_to || '',
+    } : null;
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit', full_name: 'Office Visit', phone_number: phone,
+          country: '', source: `profile:${slug}`, owner_user: ownerUser,
+          has_visit_date: true, visit_date: date, message: 'Hot lead - scheduled office visit',
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) { setVisitOfficeSubmitted(true); setSelectedVisitDate(date); setVisitOfficePhone(''); }
+      else setVisitOfficeError(data.msg || 'Could not submit.');
+    } catch { setVisitOfficeError('Network error.'); }
+    setVisitOfficeLoading(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -174,6 +217,52 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
               )}
             </div>
             <div>
+              {/* VISIT OFFICE QUICK-SCHEDULE */}
+              <div style={{ background: '#151623', padding: 'clamp(28px, 3vw, 36px)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: 32 }}>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, marginBottom: 12 }}>VISIT OFFICE</div>
+                  <h3 style={{ fontSize: 'clamp(20px,2.5vw,26px)', fontWeight: 700, color: 'white', letterSpacing: '-0.02em' }}>Schedule a visit.</h3>
+                  <p style={{ fontSize: 14, color: '#d5d3d4', fontWeight: 500, marginTop: 8, lineHeight: 1.5 }}>Enter your phone and pick a date — we&apos;ll register you as a hot lead instantly.</p>
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Your Phone Number</label>
+                  <input type="tel" value={visitOfficePhone} onChange={e => { setVisitOfficePhone(e.target.value); setVisitOfficeError(''); setVisitOfficeSubmitted(false); }} placeholder="+880 1XXX-XXXXXX" style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(255,255,255,0.2)', background: 'transparent', fontSize: 15, color: 'white', fontWeight: 500, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.5)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Pick Your Date</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {getNext10Days().map(day => {
+                      const isSelected = selectedVisitDate === day.iso;
+                      return (
+                        <button key={day.iso} onClick={() => handleVisitOfficeSubmit(day.iso)}
+                          disabled={visitOfficeLoading || visitOfficeSubmitted}
+                          style={{
+                            padding: '10px 14px', border: `1px solid ${isSelected ? '#bc7155' : 'rgba(255,255,255,0.2)'}`,
+                            background: isSelected ? 'rgba(188,113,85,0.15)' : 'transparent',
+                            borderRadius: 8, cursor: visitOfficeLoading || visitOfficeSubmitted ? 'default' : 'pointer',
+                            fontSize: 12, fontWeight: 600, color: 'white', textAlign: 'center', minWidth: 72,
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => { if (!visitOfficeSubmitted && !isSelected) { e.currentTarget.style.borderColor = '#bc7155'; e.currentTarget.style.background = 'rgba(188,113,85,0.08)'; } }}
+                          onMouseLeave={e => { if (!isSelected) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.background = 'transparent'; } }}
+                        >{day.label}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {visitOfficeError && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: 'rgba(254,242,242,0.1)', border: '1px solid rgba(254,202,202,0.3)', marginBottom: 16 }}>
+                    <CircleAlert size={16} color="#fca5a5" />
+                    <span style={{ fontSize: 13, color: '#fca5a5', fontWeight: 500 }}>{visitOfficeError}</span>
+                  </div>
+                )}
+                {visitOfficeSubmitted && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: 'rgba(240,253,244,0.1)', border: '1px solid rgba(187,247,208,0.3)' }}>
+                    <CircleCheck size={16} color="#86efac" />
+                    <span style={{ fontSize: 13, color: '#86efac', fontWeight: 500 }}>Visit scheduled! We&apos;ll confirm shortly.</span>
+                  </div>
+                )}
+              </div>
               <div style={{ background: 'white', padding: 'clamp(32px,4vw,40px)', border: '1px solid rgba(0,13,16,0.12)' }}>
                 <div style={{ marginBottom: 32, paddingBottom: 32, borderBottom: '1px solid rgba(0,13,16,0.1)' }}>
                   <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700, marginBottom: 12 }}>SEND ENQUIRY</div>
