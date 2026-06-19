@@ -141,7 +141,7 @@ export default function HomePage() {
       {/* HEADER */}
       <header style={{ position: 'sticky', top: 0, zIndex: 40 }}>
         <div style={{ background: 'white', borderBottom: '1px solid rgba(0,13,16,0.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1280, margin: '0 auto', padding: '20px 24px' }}>
+          <div className="header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 1280, margin: '0 auto', padding: '20px 24px' }}>
             <a href="/" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <Plane size={16} color="#bc7155" />
@@ -151,7 +151,7 @@ export default function HomePage() {
               <span style={{ fontSize: 9, color: '#8e8e95', letterSpacing: '0.15em', marginTop: 2, textTransform: 'uppercase', fontWeight: 500 }}>BAIRA Lic. RL-2716</span>
             </a>
             {/* Desktop nav */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+            <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
               {[['Active Circulars', '#circulars'], ['Success Stories', '#stories']].map(([label, href]) => (
                 <a key={href} href={href} style={{ fontSize: 13, fontWeight: 600, color: '#000d10', textDecoration: 'none', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</a>
               ))}
@@ -173,8 +173,7 @@ export default function HomePage() {
                 )}
               </div>
               <a href="#contact" style={{ padding: '8px 20px', background: '#000d10', color: 'white', borderRadius: 9999, fontSize: 13, fontWeight: 700, textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Get Consultation</a>
-            </nav>
-            <button onClick={() => setMobileOpen(!mobileOpen)} style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: '#000d10' }} className="mobile-menu-btn">
+            </nav>              <button onClick={() => setMobileOpen(!mobileOpen)} style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: '#000d10', alignItems: 'center', justifyContent: 'center', padding: 4 }} className="mobile-menu-btn">
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
@@ -189,8 +188,8 @@ export default function HomePage() {
       </header>
 
       {/* HERO */}
-      <section style={{ background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section className="section-hero" style={{ background: 'white' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 16px', border: '1px solid rgba(0,13,16,0.12)', borderRadius: 9999, marginBottom: 40 }}>
             <span style={{ color: '#bc7155', marginRight: 8, fontSize: 12 }}>●</span>
             <span style={{ fontSize: 11, letterSpacing: '0.25em', fontWeight: 700, color: '#000d10', textTransform: 'uppercase' }}>{s.hero_badge}</span>
@@ -199,7 +198,7 @@ export default function HomePage() {
             {s.hero_heading}<span style={{ color: '#bc7155' }}>{s.hero_heading_accent}</span>
           </h1>
           <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: '#8e8e95', maxWidth: 640, lineHeight: 1.6, fontWeight: 500, marginBottom: 48 }}>{s.hero_paragraph}</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 80 }}>
+          <div className="hero-buttons" style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 80 }}>
             <a href="#contact" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 32px', background: '#000d10', color: 'white', borderRadius: 9999, fontSize: 13, fontWeight: 700, textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {s.hero_cta_primary} <ArrowRight size={16} />
             </a>
@@ -207,7 +206,7 @@ export default function HomePage() {
               {s.hero_cta_secondary}
             </a>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: '24px 0', paddingTop: 48, borderTop: '1px solid rgba(0,13,16,0.08)' }}>
+          <div className="hero-stats" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: '24px 0', paddingTop: 48, borderTop: '1px solid rgba(0,13,16,0.08)' }}>
             {[['stat_1_value', 'stat_1_label'], ['stat_2_value', 'stat_2_label'], ['stat_3_value', 'stat_3_label'], ['stat_4_value', 'stat_4_label']].map(([vk, lk], i) => (
               <div key={i} style={{ paddingLeft: i === 0 ? 0 : 32, paddingRight: 32, borderRight: i < 3 ? '1px solid rgba(0,13,16,0.10)' : 'none' }}>
                 <div style={{ fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 700, color: '#000d10', letterSpacing: '-0.03em' }}>{s[vk]}</div>
@@ -219,8 +218,8 @@ export default function HomePage() {
       </section>
 
       {/* SLIDER */}
-      <section style={{ background: '#0f0f1c' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section className="section-slider" style={{ background: '#0f0f1c' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ minHeight: 340 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 40 }}>
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
@@ -247,8 +246,8 @@ export default function HomePage() {
       </section>
 
       {/* ABOUT */}
-      <section style={{ background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section className="section-about" style={{ background: 'white' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: 64 }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 40 }}>
@@ -277,8 +276,8 @@ export default function HomePage() {
       </section>
 
       {/* CIRCULARS */}
-      <section id="circulars" style={{ background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section id="circulars" className="section-circulars" style={{ background: 'white' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 64, gap: 40 }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 32 }}>
@@ -325,8 +324,8 @@ export default function HomePage() {
       </section>
 
       {/* AWARDS */}
-      <section id="awards" style={{ background: '#0f0f1c' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section id="awards" className="section-awards" style={{ background: '#0f0f1c' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ marginBottom: 64 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 40 }}>
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
@@ -363,8 +362,8 @@ export default function HomePage() {
       </section>
 
       {/* FLIGHTS */}
-      <section id="flights" style={{ background: '#0f0f1c' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section id="flights" className="section-flights" style={{ background: '#0f0f1c' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ marginBottom: 64 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 32 }}>
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
@@ -411,8 +410,8 @@ export default function HomePage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section id="stories" style={{ background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section id="stories" className="section-testimonials" style={{ background: 'white' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ marginBottom: 64 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 32 }}>
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
@@ -452,8 +451,8 @@ export default function HomePage() {
       </section>
 
       {/* CONTACT */}
-      <section id="contact" style={{ background: '#0f0f1c' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
+      <section id="contact" className="section-contact" style={{ background: '#0f0f1c' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 128px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: 64 }}>
             <div>
               <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 40 }}>
@@ -570,8 +569,8 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ background: 'white' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 24px 96px' }}>
+      <footer className="footer-section" style={{ background: 'white' }}>
+        <div className="section-inner" style={{ maxWidth: 1280, margin: '0 auto', padding: '80px 24px 96px' }}>
           <div style={{ marginBottom: 80 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 16px', border: '1px solid rgba(0,13,16,0.12)', borderRadius: 9999, marginBottom: 48 }}>
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
@@ -613,7 +612,118 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`}</style>
+      <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* ─── Mobile Responsiveness ──────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Show mobile menu button, hide desktop nav items */
+  .mobile-menu-btn { display: flex !important; }
+  .desktop-nav > a:not(.mobile-keep),
+  .desktop-nav > div { display: none !important; }
+  .desktop-nav > a:last-child { display: none !important; }
+
+  /* Center all section text on mobile */
+  .section-hero, .section-slider, .section-about,
+  .section-circulars, .section-awards, .section-flights,
+  .section-testimonials, .section-contact, .footer-section {
+    text-align: center;
+  }
+
+  /* Center headings */
+  .section-hero h1,
+  .section-hero p,
+  .section-about h2,
+  .section-about p,
+  .section-circulars h2,
+  .section-circulars p,
+  .section-awards h2,
+  .section-awards p,
+  .section-flights h2,
+  .section-flights p,
+  .section-testimonials h2,
+  .section-testimonials p,
+  .section-contact h2,
+  .section-contact p,
+  .footer-section h2,
+  .footer-section p {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center;
+  }
+
+  /* Center hero badge */
+  .section-hero > div > div:first-child {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Center hero buttons */
+  .section-hero > div > div:nth-child(4) {
+    justify-content: center;
+  }
+
+  /* Stats: center, remove borders, half width */
+  .section-hero .hero-stats {
+    justify-content: center !important;
+  }
+  .section-hero .hero-stats > div {
+    border-right: none !important;
+    padding: 8px 12px !important;
+    text-align: center;
+    width: 50%;
+  }
+
+  /* Section heading badge centering */
+  .section-slider > div > div:first-child > div:first-child,
+  .section-about > div > div:first-child > div:first-child,
+  .section-circulars > div > div:first-child > div:first-child > div:first-child,
+  .section-awards > div > div:first-child > div:first-child,
+  .section-flights > div > div:first-child > div:first-child,
+  .section-testimonials > div > div:first-child > div:first-child,
+  .section-contact > div > div:first-child > div:first-child,
+  .footer-section > div > div:first-child {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Contact section first column centering */
+  .section-contact > div > div:first-child {
+    text-align: center;
+  }
+  .section-contact > div > div:first-child p {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Contact info rows centering */
+  .section-contact > div > div:first-child > div:not(:first-child) {
+    justify-content: center;
+  }
+
+  /* Reduce section padding on mobile */
+  .section-inner {
+    padding: 64px 20px 80px !important;
+  }
+
+  /* Footer centering */
+  .footer-section h2 {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Mobile menu items styling */
+  header .header-inner {
+    padding: 16px 20px !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .section-inner {
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+}`}</style>
     </main>
   );
 }
