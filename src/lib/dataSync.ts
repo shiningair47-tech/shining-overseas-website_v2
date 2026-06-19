@@ -76,8 +76,9 @@ export async function createAccount(email: string, fullName: string, role: strin
   if (!emailClean || !emailClean.includes('@')) return [false, 'Invalid email.', ''];
   if (!nameClean) return [false, 'Full name is required.', ''];
   if (await emailTaken(emailClean)) return [false, 'Email already exists.', ''];
-  const pass = (!tempPassword || tempPassword.length < 8) ? generateTempPassword() : tempPassword;
-  const passwordHash = bcrypt.hashSync(pass, 12);
+  if (!tempPassword || tempPassword.length < 8) return [false, 'Temporary password is required (min 8 characters).', ''];
+  const passwordHash = bcrypt.hashSync(tempPassword, 12);
+  const pass = tempPassword;
   const referralCode = await uniqueReferralCode(nameClean);
   const payload: Record<string, unknown> = {
     id: uuid(), email: emailClean, password_hash: passwordHash, role: roleUp,
@@ -103,10 +104,26 @@ export async function resetAccountPassword(userId: string): Promise<[boolean, st
   } catch { return [false, 'Could not reset.', '']; }
 }
 
+export async function toggleAccountStatus(userId: string, newStatus: string): Promise<boolean> {
+  const c = getSupabaseClient(); if (!c) return false;
+  try {
+    await c.from('users').update({ status: newStatus }).eq('id', userId);
+    return true;
+  } catch { return false; }
+}
+
 export async function deleteAccount(userId: string): Promise<[boolean, string]> {
   const c = getSupabaseClient(); if (!c) return [false, 'No DB'];
-  try { await c.from('users').delete().eq('id', userId); return [true, 'Deleted.']; }
-  catch { return [false, 'Could not delete.']; }
+  try {
+    // Reassign any leads owned by this user to the admin before deleting
+    const { data: admins } = await c.from('users').select('id').eq('role', 'ADMIN').limit(1);
+    if (admins?.length) {
+      const adminId = admins[0].id;
+      await c.from('candidates').update({ influencer_id: adminId }).eq('influencer_id', userId);
+    }
+    await c.from('users').delete().eq('id', userId);
+    return [true, 'Deleted.'];
+  } catch { return [false, 'Could not delete. This account may have associated data preventing deletion.']; }
 }
 
 // ---- PROFILE METADATA ----

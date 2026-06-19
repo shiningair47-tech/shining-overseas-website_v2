@@ -125,6 +125,7 @@ export default function SiteAdminPage() {
     } else if (type === 'testimonial') {
       url = '/api/testimonials'; body = { id, quote: form.quote, name: form.name, role: form.role, country: form.country, image_url: form.image_url || '', is_featured: form.is_featured === 'true' };
     } else if (type === 'account') {
+      if (!form.temp_password || form.temp_password.length < 8) { setFormMsg('Temporary password is required (min 8 characters).'); return; }
       url = '/api/accounts'; body = { email: form.email, full_name: form.full_name, role: form.role || 'TEAM_MEMBER', temp_password: form.temp_password, assigned_to: form.assigned_to || '' };
     } else if (type === 'transfer_lead') {
       url = '/api/leads'; body = { action: 'transfer', lead_id: form.lead_id, new_owner_id: form.new_owner_id, new_owner_name: teamOptions.find((t: Record<string, unknown>) => t.id === form.new_owner_id)?.full_name || '' };
@@ -150,7 +151,11 @@ export default function SiteAdminPage() {
       else if (tab === 'flights') await fetch('/api/flights', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
       else if (tab === 'awards') await fetch('/api/awards', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
       else if (tab === 'testimonials') await fetch('/api/testimonials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-      else if (tab === 'accounts') await fetch('/api/accounts', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+      else if (tab === 'accounts') {
+        const res = await fetch('/api/accounts', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+        const data = await res.json();
+        if (!data.ok) { alert(data.msg || 'Failed to delete account.'); return; }
+      }
       await loadTab(activeTab);
     } catch {}
   };
@@ -160,6 +165,7 @@ export default function SiteAdminPage() {
       if (tab === 'circulars') await fetch('/api/circulars', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, toggleActive: true, value: !current }) });
       else if (tab === 'testimonials') await fetch('/api/testimonials', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, toggleFeatured: true, value: !current }) });
       else if (tab === 'digital_id') await fetch('/api/digital-id', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'toggle_active', id, value: !current }) });
+      else if (tab === 'accounts') await fetch('/api/accounts', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, toggleActive: true, value: !!current }) });
       await loadTab(activeTab);
     } catch {}
   };
@@ -378,8 +384,10 @@ export default function SiteAdminPage() {
                       <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>{a.email as string} · <span style={{ fontWeight: 700, color: a.role === 'TEAM_MEMBER' ? '#1d4ed8' : '#7c3aed' }}>{a.role as string}</span></div>
                       {Boolean(a.referral_code) && <div style={{ fontSize: 11, color: '#bc7155', marginTop: 4, fontWeight: 600 }}>Code: {String(a.referral_code)}</div>}
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      <span style={{ fontSize: 10, padding: '4px 10px', background: (a.status as string) === 'ACTIVE' ? '#f0fdf4' : '#f1f5f9', color: (a.status as string) === 'ACTIVE' ? '#16a34a' : '#64748b', fontWeight: 700, borderRadius: 9999, textTransform: 'uppercase' }}>{a.status as string}</span>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                      <button onClick={() => handleToggle('accounts', a.id as string, 'status', (a.status as string) !== 'ACTIVE')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: (a.status as string) === 'ACTIVE' ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
+                        {(a.status as string) === 'ACTIVE' ? <ToggleRight size={18} /> : <ToggleLeft size={18} />} {(a.status as string) === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE'}
+                      </button>
                       <ActionBtn onClick={() => handleResetPassword(a.id as string)} icon={RefreshCw} label="Reset PW" />
                       <ActionBtn onClick={() => handleDelete('accounts', a.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
@@ -554,7 +562,7 @@ export default function SiteAdminPage() {
               </select>
             </div>
           )}
-          <Field label="Temp Password (optional)" name="temp_password" value={form.temp_password || ''} onChange={v => setForm(p => ({ ...p, temp_password: v }))} placeholder="Leave blank to auto-generate" />
+          <Field label="Temporary Password *" name="temp_password" value={form.temp_password || ''} onChange={v => setForm(p => ({ ...p, temp_password: v }))} placeholder="Min 8 characters" />
           {formMsg && <div style={{ padding: '10px 16px', background: formMsg.includes('Error') || formMsg.includes('error') ? '#fef2f2' : '#f0fdf4', border: '1px solid', borderColor: formMsg.includes('Error') || formMsg.includes('error') ? '#fecaca' : '#bbf7d0', marginBottom: 20, fontSize: 13, color: formMsg.includes('Error') || formMsg.includes('error') ? '#dc2626' : '#15803d', fontWeight: 500, wordBreak: 'break-all' }}>{formMsg}</div>}
           <button onClick={handleFormSubmit} style={{ width: '100%', padding: '14px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Create Account</button>
         </Modal>
