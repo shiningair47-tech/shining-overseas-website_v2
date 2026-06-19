@@ -406,14 +406,14 @@ export default function HomePage() {
                         <span style={{ fontSize: 10, letterSpacing: '0.25em', color: '#34d399', fontWeight: 700 }}>DEPLOYED</span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-                      <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.origin}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, padding: '0 16px' }}>
+                    <div className="flight-route-row" style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                      <span className="flight-origin" style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.origin}</span>
+                      <div className="flight-route-line" style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, padding: '0 16px' }}>
                         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
                         <Plane size={16} color="#bc7155" />
                         <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
                       </div>
-                      <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.destination}</span>
+                      <span className="flight-destination" style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.destination}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#d5d3d4', fontWeight: 500, letterSpacing: '0.03em', marginBottom: 32 }}>{f.route}</div>
                     <div style={{ fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>{f.flight_date}</div>
@@ -749,6 +749,28 @@ export default function HomePage() {
   .flight-card {
     width: 100% !important;
     padding: 0 !important;
+  }
+
+  /* Flight route: vertical stack on mobile */
+  .flight-route-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-bottom: 24px !important;
+  }
+  .flight-route-line {
+    width: 100% !important;
+    padding: 0 !important;
+    flex: none !important;
+  }
+  .flight-route-line > div {
+    flex: 1 !important;
+  }
+  .flight-card > div {
+    padding: 28px !important;
+  }
+  .flight-card > div > div:first-child {
+    margin-bottom: 28px !important;
+    padding-bottom: 16px !important;
   }
 }
 
