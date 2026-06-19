@@ -9,8 +9,17 @@ interface Flight { id: string; group_name: string; role: string; origin: string;
 interface Award { id: string; title: string; issuer: string; year: string; description: string; sort_order: number }
 interface Testimonial { id: string; quote: string; name: string; role: string; country: string; image_url: string; is_featured: boolean }
 
+const DEMO_FLIGHTS: Flight[] = [
+  { id: 'demo-1', group_name: 'Alpha Group', role: 'Construction Workers', origin: 'DAC', destination: 'RUH', route: 'Dhaka → Riyadh',  flight_date: '02 Jun 2026' },
+  { id: 'demo-2', group_name: 'Beta Group', role: 'Housekeeping Staff', origin: 'DAC', destination: 'KUL', route: 'Dhaka → Kuala Lumpur', flight_date: '05 Jun 2026' },
+  { id: 'demo-3', group_name: 'Gamma Group', role: 'Factory Workers', origin: 'DAC', destination: 'DXB', route: 'Dhaka → Dubai', flight_date: '08 Jun 2026' },
+  { id: 'demo-4', group_name: 'Delta Group', role: 'Drivers', origin: 'DAC', destination: 'DOH', route: 'Dhaka → Doha', flight_date: '12 Jun 2026' },
+  { id: 'demo-5', group_name: 'Epsilon Group', role: 'Security Personnel', origin: 'DAC', destination: 'KWI', route: 'Dhaka → Kuwait City',  flight_date: '15 Jun 2026' },
+  { id: 'demo-6', group_name: 'Zeta Group', role: 'Sales Staff', origin: 'DAC', destination: 'MLE', route: 'Dhaka → Male', flight_date: '19 Jun 2026' },
+];
+
 const DEFAULT_SETTINGS: SiteSettings = {
-  hero_badge: 'BAIRA LICENSED · REG. NO. RL-2716', hero_heading: 'Your trusted gateway to ', hero_heading_accent: 'global opportunity.',
+  hero_badge: 'BAIRA LICENSED · REG. NO. RL-2716', hero_heading: 'Your trusted gateway to ', hero_heading_accent: 'global opportunity',
   hero_paragraph: 'BAIRA-licensed overseas recruitment for Bangladeshi workers. Saudi Arabia, Malaysia, UAE, Qatar, Kuwait — handled end to end with verified employers, sharp execution, and full compliance.',
   hero_cta_primary: 'Get Free Consultation', hero_cta_secondary: 'View Active Circulars',
   stat_1_value: '12,000+', stat_1_label: 'Workers Placed', stat_2_value: '15+', stat_2_label: 'Years of Trust',
@@ -19,15 +28,15 @@ const DEFAULT_SETTINGS: SiteSettings = {
   slide_2_label: 'PROVEN TRACK RECORD', slide_2_title: 'Over 12,000 workers placed since 2009', slide_2_subtitle: 'BAIRA-licensed and globally connected with verified employers.',
   slide_3_label: 'END-TO-END SUPPORT', slide_3_title: 'Visa, training, and deployment under one roof', slide_3_subtitle: 'From medical tests to airport handover — we handle every step.',
   slide_4_label: 'COUNTRY COVERAGE', slide_4_title: 'Saudi Arabia, Malaysia, UAE, Qatar, Kuwait', slide_4_subtitle: 'Direct demand letters from licensed Gulf and ASEAN employers.',
-  about_heading: 'Built on trust,', about_heading_accent: 'since 2009.',
+  about_heading: 'Built on trust,', about_heading_accent: 'since 2009',
   about_body_1: "Shining Overseas was founded in Dhaka with one mission: to give Bangladeshi workers a fair, transparent, and licensed path to overseas employment. Over fifteen years, we've grown from a small office to a BAIRA-licensed agency with verified employer partners across the Gulf and Southeast Asia.",
   about_body_2: "Every worker we place is supported through medical, training, visa processing, and post-deployment care. We don't take shortcuts — and we don't charge what we don't deliver.",
-  footer_headline: 'Your trusted gateway to global opportunity.',
+  footer_headline: 'Your trusted gateway to global opportunity',
   footer_description: 'BAIRA-licensed overseas recruitment agency placing skilled Bangladeshi workers across the Gulf and Southeast Asia since 2009.',
   contact_label: 'GET CONSULTATION',
   contact_heading_1: 'Talk to a',
   contact_heading_2: 'licensed advisor',
-  contact_heading_3_acc: 'today.',
+  contact_heading_3_acc: 'today',
   contact_paragraph: 'Free consultation. No commitment. Our team responds within 24 hours.',
   contact_office: 'Plot 47, Road 11, Banani, Dhaka 1213',
   contact_hotline: '+880 1700-000000',
@@ -46,6 +55,7 @@ export default function HomePage() {
   const [awards, setAwards] = useState<Award[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [flightIndex, setFlightIndex] = useState(0);
   const [awardIndex, setAwardIndex] = useState(0);
   const [selectedCountry, setSelectedCountry] = useState('All');
   const [portalOpen, setPortalOpen] = useState(false);
@@ -85,7 +95,14 @@ export default function HomePage() {
     return () => clearInterval(iv);
   }, []);
 
+  useEffect(() => {
+    const len = flights.length > 0 ? flights.length : 6;
+    const fiv = setInterval(() => setFlightIndex(i => (i + 1) % len), 1000);
+    return () => clearInterval(fiv);
+  }, [flights.length]);
+
   const s = settings;
+  const displayFlights = flights.length > 0 ? flights : DEMO_FLIGHTS;
   const slides = [
     { label: s.slide_1_label, title: s.slide_1_title, subtitle: s.slide_1_subtitle },
     { label: s.slide_2_label, title: s.slide_2_title, subtitle: s.slide_2_subtitle },
@@ -285,7 +302,7 @@ export default function HomePage() {
                 <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700 }}>ACTIVE CIRCULARS</span>
               </div>
               <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: '#000d10', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>
-                Open positions,<br /><span style={{ color: '#bc7155' }}>hiring now.</span>
+                Open positions,<br /><span style={{ color: '#bc7155', fontWeight: 700 }}>HIRING NOW</span>
               </h2>
               <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#8e8e95', lineHeight: 1.6, fontWeight: 500, maxWidth: 480 }}>Verified jobs with valid demand letters from licensed employers.</p>
             </div>
@@ -331,7 +348,7 @@ export default function HomePage() {
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
               <span style={{ fontSize: 11, letterSpacing: '0.25em', color: 'white', fontWeight: 700 }}>RECOGNITION</span>
             </div>
-            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: 'white', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Awards &<br />accreditations.</h2>
+            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: 'white', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Awards &<br />accreditations</h2>
             <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#d5d3d4', lineHeight: 1.6, fontWeight: 500, maxWidth: 480 }}>Recognized by industry bodies and government for ethical recruitment.</p>
           </div>
           {awards.length === 0 ? (
@@ -369,43 +386,52 @@ export default function HomePage() {
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
               <span style={{ fontSize: 11, letterSpacing: '0.25em', color: 'white', fontWeight: 700 }}>RECENT FLIGHTS</span>
             </div>
-            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: 'white', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Workers we&apos;ve<br />deployed this month.</h2>
+            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: 'white', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Workers we&apos;ve<br />deployed this month</h2>
             <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#d5d3d4', lineHeight: 1.6, fontWeight: 500, maxWidth: 480 }}>Real groups. Real flights. Real people building their futures.</p>
           </div>
-          {flights.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '96px 0', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <p style={{ color: '#d5d3d4', fontSize: 14 }}>No flights yet.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 1, background: 'rgba(255,255,255,0.05)', overflowX: 'auto', paddingBottom: 24, marginLeft: -24, marginRight: -24, paddingLeft: 24, paddingRight: 24 }}>
-              {flights.map((f, i) => (
-                <div key={f.id} style={{ flexShrink: 0, width: 'clamp(300px, 38vw, 380px)', padding: 36, background: '#151623', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40, paddingBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700 }}>0{i + 1}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ height: 6, width: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-                      <span style={{ fontSize: 10, letterSpacing: '0.25em', color: '#34d399', fontWeight: 700 }}>DEPLOYED</span>
+          {/* Carousel: mobile = 1 card, desktop = 3 cards */}
+          <div className="flight-carousel-wrap" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div className="flight-carousel-track" style={{
+              display: 'flex', gap: 1,
+              transition: 'transform 0.4s ease',
+              transform: `translateX(-${(flightIndex % displayFlights.length) / displayFlights.length * 100}%)`,
+            }}>
+              {displayFlights.map((f, i) => (
+                <div key={f.id} className="flight-card" style={{ flexShrink: 0, width: '100%', padding: '0 max(8px, calc((100% - 400px) / 2))', boxSizing: 'border-box' }}>
+                  <div style={{ padding: 36, background: '#151623', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 40, paddingBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#bc7155', fontWeight: 700 }}>0{i + 1}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ height: 6, width: 6, borderRadius: '50%', background: '#34d399', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+                        <span style={{ fontSize: 10, letterSpacing: '0.25em', color: '#34d399', fontWeight: 700 }}>DEPLOYED</span>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-                    <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.origin}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, padding: '0 16px' }}>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
-                      <Plane size={16} color="#bc7155" />
-                      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
+                      <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.origin}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, padding: '0 16px' }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+                        <Plane size={16} color="#bc7155" />
+                        <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.2)' }} />
+                      </div>
+                      <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.destination}</span>
                     </div>
-                    <span style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 700, color: 'white', letterSpacing: '-0.03em' }}>{f.destination}</span>
-                  </div>
-                  <div style={{ fontSize: 13, color: '#d5d3d4', fontWeight: 500, letterSpacing: '0.03em', marginBottom: 32 }}>{f.route}</div>
-                  <div style={{ fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>{f.flight_date}</div>
-                  <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ fontSize: 12, color: '#bc7155', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>{f.group_name}</div>
-                    <div style={{ fontSize: 16, color: 'white', fontWeight: 700, letterSpacing: '-0.01em' }}>{f.role}</div>
+                    <div style={{ fontSize: 13, color: '#d5d3d4', fontWeight: 500, letterSpacing: '0.03em', marginBottom: 32 }}>{f.route}</div>
+                    <div style={{ fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.4)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>{f.flight_date}</div>
+                    <div style={{ paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ fontSize: 12, color: '#bc7155', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: 8 }}>{f.group_name}</div>
+                      <div style={{ fontSize: 16, color: 'white', fontWeight: 700, letterSpacing: '-0.01em' }}>{f.role}</div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
+          {/* Navigation dots */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 48 }}>
+            {displayFlights.map((_, i) => (
+              <button key={i} onClick={() => setFlightIndex(i)} style={{ height: 1, width: (flightIndex % displayFlights.length) === i ? 48 : 24, background: (flightIndex % displayFlights.length) === i ? '#bc7155' : 'rgba(255,255,255,0.25)', border: 'none', cursor: 'pointer', transition: 'all 0.5s' }} />
+            ))}
+          </div>
         </div>
       </section>
 
@@ -417,7 +443,7 @@ export default function HomePage() {
               <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
               <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700 }}>SUCCESS STORIES</span>
             </div>
-            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: '#000d10', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Voices from<br /><span style={{ color: '#bc7155' }}>the field.</span></h2>
+            <h2 style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 700, color: '#000d10', lineHeight: 1.0, letterSpacing: '-0.03em', marginBottom: 32 }}>Voices from<br /><span style={{ color: '#bc7155' }}>the field</span></h2>
             <p style={{ fontSize: 'clamp(15px, 1.5vw, 18px)', color: '#8e8e95', lineHeight: 1.6, fontWeight: 500, maxWidth: 480 }}>From Riyadh to Kuala Lumpur — workers we placed, in their own words.</p>
           </div>
           {testimonials.length === 0 ? (
@@ -714,6 +740,33 @@ export default function HomePage() {
   /* Mobile menu items styling */
   header .header-inner {
     padding: 16px 20px !important;
+  }
+
+  /* Flights carousel: full-width card on mobile */
+  .flight-carousel-track {
+    width: 100%;
+  }
+  .flight-card {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+}
+
+/* Desktop: show 3 cards in a row for flights */
+@media (min-width: 768px) {
+  .flight-carousel-wrap {
+    overflow: visible !important;
+  }
+  .flight-carousel-track {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1px !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .flight-card {
+    width: auto !important;
+    padding: 0 !important;
   }
 }
 
