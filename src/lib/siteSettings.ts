@@ -25,8 +25,8 @@ export const DEFAULT_SETTINGS: Record<string, string> = {
   slide_4_subtitle: 'Direct demand letters from licensed Gulf and ASEAN employers.',
   about_heading: 'Built on trust,',
   about_heading_accent: 'since 2009.',
-  about_body_1: 'Shining Overseas was founded in Dhaka with one mission: to give Bangladeshi workers a fair, transparent, and licensed path to overseas employment. Over fifteen years, we\'ve grown from a small office to a BAIRA-licensed agency with verified employer partners across the Gulf and Southeast Asia.',
-  about_body_2: 'Every worker we place is supported through medical, training, visa processing, and post-deployment care. We don\'t take shortcuts — and we don\'t charge what we don\'t deliver.',
+  about_body_1: "Shining Overseas was founded in Dhaka with one mission: to give Bangladeshi workers a fair, transparent, and licensed path to overseas employment. Over fifteen years, we've grown from a small office to a BAIRA-licensed agency with verified employer partners across the Gulf and Southeast Asia.",
+  about_body_2: "Every worker we place is supported through medical, training, visa processing, and post-deployment care. We don't take shortcuts — and we don't charge what we don't deliver.",
   footer_headline: 'Your trusted gateway to global opportunity.',
   footer_description: 'BAIRA-licensed overseas recruitment agency placing skilled Bangladeshi workers across the Gulf and Southeast Asia since 2009.',
   contact_label: 'GET CONSULTATION',
@@ -55,10 +55,16 @@ export async function loadSiteSettings(): Promise<Record<string, string>> {
     const { data } = await client.from('settings').select('key,value').in('key', keys);
     for (const row of data || []) {
       const short = row.key.replace('site_settings:', '');
-      if (short in DEFAULT_SETTINGS && row.value) out[short] = row.value;
+      if (short in DEFAULT_SETTINGS && row.value) {
+        out[short] = cleanValue(row.value);
+      }
     }
   } catch {}
   return out;
+}
+
+function cleanValue(v: string): string {
+  return v.replace(/\\/g, '').replace(/^["']+|["']+$/g, '').trim();
 }
 
 export async function saveSiteSettings(data: Record<string, string>): Promise<boolean> {
@@ -67,7 +73,7 @@ export async function saveSiteSettings(data: Record<string, string>): Promise<bo
   try {
     const rows = SETTING_KEYS.map(key => ({
       key: `site_settings:${key}`,
-      value: (data[key] || DEFAULT_SETTINGS[key] || '').slice(0, 255),
+      value: cleanValue(data[key] || DEFAULT_SETTINGS[key] || '').slice(0, 255),
     }));
     await client.from('settings').upsert(rows, { onConflict: 'key' });
     return true;
