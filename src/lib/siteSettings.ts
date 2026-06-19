@@ -56,7 +56,16 @@ export async function loadSiteSettings(): Promise<Record<string, string>> {
     for (const row of data || []) {
       const short = row.key.replace('site_settings:', '');
       if (short in DEFAULT_SETTINGS && row.value) {
-        out[short] = cleanValue(row.value);
+        const cleaned = cleanValue(row.value);
+        const defaultVal = DEFAULT_SETTINGS[short];
+        // If loaded value differs from default ONLY by case, keep the default's casing.
+        // This prevents a flash when DB has uppercase values (e.g. 'GLOBAL OPPORTUNITY')
+        // while DEFAULT_SETTINGS has the desired casing (e.g. 'global opportunity').
+        if (cleaned.toLowerCase() === defaultVal.toLowerCase()) {
+          out[short] = defaultVal;
+        } else {
+          out[short] = cleaned;
+        }
       }
     }
   } catch {}
