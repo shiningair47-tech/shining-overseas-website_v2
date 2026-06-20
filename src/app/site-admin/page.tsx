@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plane, Plus, X, Check, LoaderCircle, Pencil, Trash2, ToggleLeft, ToggleRight, ArrowRight, LogOut, Copy, CheckCheck, RefreshCw } from 'lucide-react';
 
@@ -63,6 +63,8 @@ export default function SiteAdminPage() {
   const [formMsg, setFormMsg] = useState('');
   const [copied, setCopied] = useState('');
   const [settingsSaveMsg, setSettingsSaveMsg] = useState('');
+  const [leadDateFilter, setLeadDateFilter] = useState('all');
+  const [leadSortOrder, setLeadSortOrder] = useState('newest');
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -185,6 +187,34 @@ export default function SiteAdminPage() {
       const data = await res.json();
       setSettingsSaveMsg(data.ok ? 'Saved!' : 'Error saving.'); setTimeout(() => setSettingsSaveMsg(''), 2000);
     } catch { setSettingsSaveMsg('Error.'); }
+  };
+
+  const isWithinDays = (created: string, days: number) => {
+    if (!created) return false;
+    const diff = Date.now() - new Date(created).getTime();
+    return diff < days * 24 * 60 * 60 * 1000;
+  };
+
+  const filteredLeads = useMemo(() => {
+    let result = [...leads];
+    if (leadDateFilter === '7d') result = result.filter(l => isWithinDays(l.created as string, 7));
+    else if (leadDateFilter === '30d') result = result.filter(l => isWithinDays(l.created as string, 30));
+    else if (leadDateFilter === '90d') result = result.filter(l => isWithinDays(l.created as string, 90));
+    result.sort((a, b) => {
+      const da = a.created ? new Date(a.created as string).getTime() : 0;
+      const db = b.created ? new Date(b.created as string).getTime() : 0;
+      return leadSortOrder === 'newest' ? db - da : da - db;
+    });
+    return result;
+  }, [leads, leadDateFilter, leadSortOrder]);
+
+  const formatLeadDate = (created: string) => {
+    if (!created) return '—';
+    const d = new Date(created);
+    const day = d.getDate();
+    const suffix = day >= 11 && day <= 13 ? 'th' : ['st','nd','rd'][(day - 1) % 10] || 'th';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${day}${suffix} ${months[d.getMonth()]}`;
   };
 
   const handleConvertLead = async (leadId: string) => {
@@ -410,8 +440,21 @@ export default function SiteAdminPage() {
                   <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>= transferred by admin</span>
                 </div>
               </div>
+              {/* Filter & Sort Bar */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {[['all', 'All time'], ['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']].map(([key, label]) => (
+                    <button key={key} onClick={() => setLeadDateFilter(key)} style={{ padding: '6px 14px', border: `1px solid ${leadDateFilter === key ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: leadDateFilter === key ? '#000d10' : 'transparent', color: leadDateFilter === key ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', transition: 'all 0.15s' }}>{label}</button>
+                  ))}
+                </div>
+                <button onClick={() => setLeadSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                  {leadSortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
+                </button>
+              </div>
               <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-                {leads.map((l, i) => (
+                {filteredLeads.length === 0 ? (
+                  <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No leads match this filter.</div>
+                ) : filteredLeads.map((l, i) => (
                   <div key={l.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -436,6 +479,7 @@ export default function SiteAdminPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, whiteSpace: 'nowrap' }}>{formatLeadDate(l.created as string)}</span>
                       <span style={{ fontSize: 10, padding: '3px 8px', background: (l.status as string) === 'DEPLOYED' ? '#f0fdf4' : '#f8f8f9', color: (l.status as string) === 'DEPLOYED' ? '#16a34a' : '#8e8e95', fontWeight: 700, borderRadius: 9999, textTransform: 'uppercase' }}>{l.status as string}</span>
                       {(l.status as string) !== 'DEPLOYED' && <ActionBtn onClick={() => handleConvertLead(l.id as string)} icon={Check} label="Convert" />}
                       {teamOptions.length > 0 && <ActionBtn onClick={() => openModal('transfer_lead', { lead_id: l.id as string, lead_name: l.name as string })} icon={ArrowRight} label="Transfer" />}
@@ -445,7 +489,6 @@ export default function SiteAdminPage() {
                     </div>
                   </div>
                 ))}
-                {leads.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No leads yet.</div>}
               </div>
             </div>
           </div>

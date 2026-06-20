@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone, Info } from 'lucide-react';
 
@@ -27,6 +27,8 @@ export default function PortalPage() {
   const [addInfLoading, setAddInfLoading] = useState(false);
   const [addInfMsg, setAddInfMsg] = useState('');
   const [coldLeadCount, setColdLeadCount] = useState(0);
+  const [dateFilter, setDateFilter] = useState('all');
+  const [sortOrder, setSortOrder] = useState('newest');
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -125,6 +127,27 @@ export default function PortalPage() {
     </div>
   );
 
+  const isWithinDays = (created: string, days: number) => {
+    if (!created) return false;
+    const diff = Date.now() - new Date(created).getTime();
+    return diff < days * 24 * 60 * 60 * 1000;
+  };
+
+  const filteredLeads = useMemo(() => {
+    let result = [...leads];
+    // Filter
+    if (dateFilter === '7d') result = result.filter(l => isWithinDays(l.created, 7));
+    else if (dateFilter === '30d') result = result.filter(l => isWithinDays(l.created, 30));
+    else if (dateFilter === '90d') result = result.filter(l => isWithinDays(l.created, 90));
+    // Sort
+    result.sort((a, b) => {
+      const da = a.created ? new Date(a.created).getTime() : 0;
+      const db = b.created ? new Date(b.created).getTime() : 0;
+      return sortOrder === 'newest' ? db - da : da - db;
+    });
+    return result;
+  }, [leads, dateFilter, sortOrder]);
+
   const isNewLead = (created: string) => {
     if (!created) return false;
     const diff = Date.now() - new Date(created).getTime();
@@ -134,6 +157,15 @@ export default function PortalPage() {
   const LeadBadge = ({ hot }: { hot: boolean }) => (
     <span style={{ padding: '4px 10px', borderRadius: 9999, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', background: hot ? '#fef3c7' : '#f1f5f9', color: hot ? '#92400e' : '#64748b', textTransform: 'uppercase' }}>{hot ? '🔥 HOT' : 'COLD'}</span>
   );
+
+  const formatLeadDate = (created: string) => {
+    if (!created) return '—';
+    const d = new Date(created);
+    const day = d.getDate();
+    const suffix = day >= 11 && day <= 13 ? 'th' : ['st','nd','rd'][(day - 1) % 10] || 'th';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${day}${suffix} ${months[d.getMonth()]}`;
+  };
 
   const NewBadge = () => (
     <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', background: '#dc2626', color: 'white', textTransform: 'uppercase', lineHeight: 1.4 }}>NEW</span>
@@ -260,7 +292,7 @@ export default function PortalPage() {
                         </div>
                       </div>
                   </div>
-                  <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{lead.created ? new Date(lead.created).toLocaleDateString() : '—'}</div>
+                  <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{formatLeadDate(lead.created)}</div>
                 </div>
               ))}
               {leads.length === 0 && <div style={{ textAlign: 'center', padding: '48px 0', color: '#8e8e95', fontSize: 14 }}>No leads yet. Share your public link to start receiving enquiries.</div>}
@@ -292,14 +324,27 @@ export default function PortalPage() {
             </div>
             {loading ? (
               <div style={{ textAlign: 'center', padding: '64px 0' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div>
-            ) : leads.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '96px 0', border: '1px solid rgba(0,13,16,0.1)' }}>
-                <Target size={32} color="#8e8e95" style={{ margin: '0 auto 16px' }} />
-                <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500 }}>No leads yet. Share your digital ID link to get started.</p>
-              </div>
             ) : (
-              <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-                {leads.map((lead, i) => (
+              <div>
+                {/* Filter & Sort Bar */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {[['all', 'All time'], ['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']].map(([key, label]) => (
+                      <button key={key} onClick={() => setDateFilter(key)} style={{ padding: '6px 14px', border: `1px solid ${dateFilter === key ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: dateFilter === key ? '#000d10' : 'transparent', color: dateFilter === key ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', transition: 'all 0.15s' }}>{label}</button>
+                    ))}
+                  </div>
+                  <button onClick={() => setSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                    {sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
+                  </button>
+                </div>
+                {filteredLeads.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '96px 0', border: '1px solid rgba(0,13,16,0.1)' }}>
+                    <Target size={32} color="#8e8e95" style={{ margin: '0 auto 16px' }} />
+                    <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500 }}>No leads match this filter.</p>
+                  </div>
+                ) : (
+                <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
+                {filteredLeads.map((lead, i) => (
                   <div key={lead.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <LeadBadge hot={lead.is_hot} />
@@ -329,13 +374,15 @@ export default function PortalPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <span style={{ fontSize: 11, padding: '4px 10px', background: lead.status === 'DEPLOYED' ? '#f0fdf4' : '#f8f8f9', color: lead.status === 'DEPLOYED' ? '#16a34a' : '#8e8e95', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', borderRadius: 9999 }}>{lead.status}</span>
-                      <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{lead.created ? new Date(lead.created).toLocaleDateString() : '—'}</span>
+                      <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{formatLeadDate(lead.created)}</span>
                       <button onClick={() => handleCopy(lead.phone, lead.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied === lead.id ? '#16a34a' : '#8e8e95' }}>
                         {copied === lead.id ? <CheckCheck size={14} /> : <Copy size={14} />}
                       </button>
                     </div>
                   </div>
                 ))}
+              </div>
+                )}
               </div>
             )}
           </div>
