@@ -69,6 +69,8 @@ export default function SiteAdminPage() {
   const [leadSortOrder, setLeadSortOrder] = useState('newest');
   const [leadPage, setLeadPage] = useState(0);
   const LEAD_PAGE_SIZE = 20;
+  const [accountPage, setAccountPage] = useState(0);
+  const ACCOUNT_PAGE_SIZE = 20;
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -449,8 +451,12 @@ export default function SiteAdminPage() {
               <button onClick={() => openModal('account')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Create Account</button>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)', marginBottom: 40 }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                accounts.map((a, i) => (
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const accTotal = Math.max(1, Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE));
+                  const accSafe = Math.min(accountPage, accTotal - 1);
+                  return accounts.slice(accSafe * ACCOUNT_PAGE_SIZE, (accSafe + 1) * ACCOUNT_PAGE_SIZE).map((a, i) => (
                   <div key={a.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{a.full_name as string}</div>
@@ -465,9 +471,24 @@ export default function SiteAdminPage() {
                       <ActionBtn onClick={() => handleDelete('accounts', a.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
                   </div>
-                ))
-              }
-              {!loading && accounts.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No accounts yet.</div>}
+                  ));
+                })()}
+                {accounts.length > ACCOUNT_PAGE_SIZE && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setAccountPage(p => Math.max(0, p - 1))} disabled={accountPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: accountPage === 0 ? '#d5d3d4' : '#000d10', cursor: accountPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: accountPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) }, (_, i) => (
+                      <button key={i} onClick={() => setAccountPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === accountPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === accountPage ? '#000d10' : 'transparent', color: i === accountPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setAccountPage(p => Math.min(Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1, p + 1))} disabled={accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? '#d5d3d4' : '#000d10', cursor: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{accounts.length} total</span>
+                  </div>
+                )}
+                {!loading && accounts.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No accounts yet.</div>}
+                </>
+              )}
             </div>
 
             {/* Leads Section */}

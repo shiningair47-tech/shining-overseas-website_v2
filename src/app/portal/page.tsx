@@ -33,6 +33,8 @@ export default function PortalPage() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [leadPage, setLeadPage] = useState(0);
   const LEAD_PAGE_SIZE = 20;
+  const [recentPage, setRecentPage] = useState(0);
+  const RECENT_PAGE_SIZE = 5;
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -168,7 +170,7 @@ export default function PortalPage() {
   const safePage = Math.min(leadPage, totalPages - 1);
   const paginatedLeads = filteredLeads.slice(safePage * LEAD_PAGE_SIZE, (safePage + 1) * LEAD_PAGE_SIZE);
 
-  // Reset page when filters change
+  // Reset pages when filters change
   useEffect(() => { setLeadPage(0); }, [dateFilter, statusFilter, searchQuery]);
 
   const isNewLead = (created: string) => {
@@ -312,7 +314,14 @@ export default function PortalPage() {
                 <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase' }}>Recent Leads</div>
                 <button onClick={() => setActiveTab('leads')} style={{ fontSize: 12, color: '#bc7155', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>View all →</button>
               </div>
-              {leads.slice(0, 5).map(lead => (
+              {leads.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px 0', color: '#8e8e95', fontSize: 14 }}>No leads yet. Share your public link to start receiving enquiries.</div>
+              ) : (
+                <>
+                {(() => {
+                  const recentTotal = Math.max(1, Math.ceil(leads.length / RECENT_PAGE_SIZE));
+                  const recentSafe = Math.min(recentPage, recentTotal - 1);
+                  return leads.slice(recentSafe * RECENT_PAGE_SIZE, (recentSafe + 1) * RECENT_PAGE_SIZE).map(lead => (
                 <div key={lead.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 0', borderTop: '1px solid rgba(0,13,16,0.08)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <LeadBadge hot={lead.is_hot} />                      <div>
@@ -337,8 +346,23 @@ export default function PortalPage() {
                   </div>
                   <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{formatLeadDate(lead.created)}</div>
                 </div>
-              ))}
-              {leads.length === 0 && <div style={{ textAlign: 'center', padding: '48px 0', color: '#8e8e95', fontSize: 14 }}>No leads yet. Share your public link to start receiving enquiries.</div>}
+                  ));
+                })()}
+                  {/* Recent leads pagination */}
+                  {leads.length > RECENT_PAGE_SIZE && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 16 }}>
+                      <button onClick={() => setRecentPage(p => Math.max(0, p - 1))} disabled={recentPage === 0}
+                        style={{ padding: '4px 12px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: recentPage === 0 ? '#d5d3d4' : '#000d10', cursor: recentPage === 0 ? 'default' : 'pointer', fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', opacity: recentPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                      {Array.from({ length: Math.ceil(leads.length / RECENT_PAGE_SIZE) }, (_, i) => (
+                        <button key={i} onClick={() => setRecentPage(i)}
+                          style={{ padding: '4px 10px', border: `1px solid ${i === recentPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === recentPage ? '#000d10' : 'transparent', color: i === recentPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 10, fontWeight: 700, minWidth: 28, textAlign: 'center' }}>{i + 1}</button>
+                      ))}
+                      <button onClick={() => setRecentPage(p => Math.min(Math.ceil(leads.length / RECENT_PAGE_SIZE) - 1, p + 1))} disabled={recentPage >= Math.ceil(leads.length / RECENT_PAGE_SIZE) - 1}
+                        style={{ padding: '4px 12px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: recentPage >= Math.ceil(leads.length / RECENT_PAGE_SIZE) - 1 ? '#d5d3d4' : '#000d10', cursor: recentPage >= Math.ceil(leads.length / RECENT_PAGE_SIZE) - 1 ? 'default' : 'pointer', fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', opacity: recentPage >= Math.ceil(leads.length / RECENT_PAGE_SIZE) - 1 ? 0.5 : 1 }}>Next →</button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}
