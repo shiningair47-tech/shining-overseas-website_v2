@@ -107,6 +107,41 @@ export default function PortalPage() {
     setAddInfLoading(false);
   };
 
+  const isWithinDays = (created: string, days: number) => {
+    if (!created) return false;
+    const diff = Date.now() - new Date(created).getTime();
+    return diff < days * 24 * 60 * 60 * 1000;
+  };
+
+  const uniqueStatuses = useMemo(() => {
+    const set = new Set(leads.map(l => l.status).filter(Boolean));
+    return Array.from(set).sort();
+  }, [leads]);
+
+  const filteredLeads = useMemo(() => {
+    let result = [...leads];
+    if (dateFilter === '7d') result = result.filter(l => isWithinDays(l.created, 7));
+    else if (dateFilter === '30d') result = result.filter(l => isWithinDays(l.created, 30));
+    else if (dateFilter === '90d') result = result.filter(l => isWithinDays(l.created, 90));
+    if (statusFilter !== 'all') result = result.filter(l => l.status === statusFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(l => (l.name || '').toLowerCase().includes(q) || (l.phone || '').includes(q));
+    }
+    result.sort((a, b) => {
+      const da = a.created ? new Date(a.created).getTime() : 0;
+      const db = b.created ? new Date(b.created).getTime() : 0;
+      return sortOrder === 'newest' ? db - da : da - db;
+    });
+    return result;
+  }, [leads, dateFilter, statusFilter, searchQuery, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / leadPageSize));
+  const safePage = Math.min(leadPage, totalPages - 1);
+  const paginatedLeads = filteredLeads.slice(safePage * leadPageSize, (safePage + 1) * leadPageSize);
+
+  useEffect(() => { setLeadPage(0); }, [dateFilter, statusFilter, searchQuery]);
+
   if (!user) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <LoaderCircle size={32} color="#bc7155" style={{ animation: 'spin 1s linear infinite' }} />
@@ -132,46 +167,6 @@ export default function PortalPage() {
       {sub && <div style={{ fontSize: 12, color: '#bc7155', fontWeight: 600, marginTop: 8 }}>{sub}</div>}
     </div>
   );
-
-  const uniqueStatuses = useMemo(() => {
-    const set = new Set(leads.map(l => l.status).filter(Boolean));
-    return Array.from(set).sort();
-  }, [leads]);
-
-  const isWithinDays = (created: string, days: number) => {
-    if (!created) return false;
-    const diff = Date.now() - new Date(created).getTime();
-    return diff < days * 24 * 60 * 60 * 1000;
-  };
-
-  const filteredLeads = useMemo(() => {
-    let result = [...leads];
-    // Filter by date
-    if (dateFilter === '7d') result = result.filter(l => isWithinDays(l.created, 7));
-    else if (dateFilter === '30d') result = result.filter(l => isWithinDays(l.created, 30));
-    else if (dateFilter === '90d') result = result.filter(l => isWithinDays(l.created, 90));
-    // Filter by status
-    if (statusFilter !== 'all') result = result.filter(l => l.status === statusFilter);
-    // Search by name or phone
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      result = result.filter(l => (l.name || '').toLowerCase().includes(q) || (l.phone || '').includes(q));
-    }
-    // Sort
-    result.sort((a, b) => {
-      const da = a.created ? new Date(a.created).getTime() : 0;
-      const db = b.created ? new Date(b.created).getTime() : 0;
-      return sortOrder === 'newest' ? db - da : da - db;
-    });
-    return result;
-  }, [leads, dateFilter, statusFilter, searchQuery, sortOrder]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / leadPageSize));
-  const safePage = Math.min(leadPage, totalPages - 1);
-  const paginatedLeads = filteredLeads.slice(safePage * leadPageSize, (safePage + 1) * leadPageSize);
-
-  // Reset pages when filters change
-  useEffect(() => { setLeadPage(0); }, [dateFilter, statusFilter, searchQuery]);
 
   const isNewLead = (created: string) => {
     if (!created) return false;
