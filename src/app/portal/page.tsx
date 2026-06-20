@@ -122,8 +122,18 @@ export default function PortalPage() {
     </div>
   );
 
+  const isNewLead = (created: string) => {
+    if (!created) return false;
+    const diff = Date.now() - new Date(created).getTime();
+    return diff < 24 * 60 * 60 * 1000; // within 24 hours
+  };
+
   const LeadBadge = ({ hot }: { hot: boolean }) => (
     <span style={{ padding: '4px 10px', borderRadius: 9999, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', background: hot ? '#fef3c7' : '#f1f5f9', color: hot ? '#92400e' : '#64748b', textTransform: 'uppercase' }}>{hot ? '🔥 HOT' : 'COLD'}</span>
+  );
+
+  const NewBadge = () => (
+    <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', background: '#dc2626', color: 'white', textTransform: 'uppercase', lineHeight: 1.4 }}>NEW</span>
   );
 
   return (
@@ -229,7 +239,10 @@ export default function PortalPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <LeadBadge hot={lead.is_hot} />
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{lead.name || '—'}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {lead.name || '—'}
+                        {isNewLead(lead.created) && <NewBadge />}
+                      </div>
                       <div style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500, marginTop: 2 }}>{lead.phone} · {lead.country || '—'}</div>
                     </div>
                   </div>
@@ -262,7 +275,10 @@ export default function PortalPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <LeadBadge hot={lead.is_hot} />
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{lead.name || '—'}</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {lead.name || '—'}
+                          {isNewLead(lead.created) && <NewBadge />}
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                           <Phone size={11} color="#8e8e95" />
                           <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>{lead.phone}</span>

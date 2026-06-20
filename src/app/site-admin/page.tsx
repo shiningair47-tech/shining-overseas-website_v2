@@ -406,7 +406,10 @@ export default function SiteAdminPage() {
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                         <span style={{ padding: '3px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', background: l.is_hot ? '#fef3c7' : '#f1f5f9', color: l.is_hot ? '#92400e' : '#64748b', textTransform: 'uppercase' }}>{l.is_hot ? '🔥 HOT' : 'COLD'}</span>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#000d10' }}>{l.name as string || '—'}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {l.name as string || '—'}
+                          {(() => { const d = l.created as string; if (!d) return null; const diff = Date.now() - new Date(d).getTime(); return diff < 24 * 60 * 60 * 1000 ? <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 8, fontWeight: 800, letterSpacing: '0.08em', background: '#dc2626', color: 'white', textTransform: 'uppercase', lineHeight: 1.4 }}>NEW</span> : null; })()}
+                        </div>
                       </div>
                       <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{l.phone as string} · Owner: {l.owner as string} · {l.country as string}</div>
                     </div>
