@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone } from 'lucide-react';
+import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone, Info } from 'lucide-react';
 
 interface User { id: string; email: string; role: string; full_name: string; phone_number: string; referral_code: string; status: string; tier: string; assigned_to: string; facebook_page: string }
 interface Lead { id: string; name: string; phone: string; is_hot: boolean; status: string; source: string; created: string; country: string; sourceLabel?: string; transferLabel?: string }
@@ -248,12 +248,12 @@ export default function PortalPage() {
                         <div style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500, marginTop: 2 }}>{lead.phone} · {lead.country || '—'}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                           {lead.sourceLabel && (
-                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            <span title="This lead was sent from an influencer's digital ID page" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                               {lead.sourceLabel}
                             </span>
                           )}
                           {lead.transferLabel && (
-                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            <span title="This lead was transferred from another team member by an admin" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                               {lead.transferLabel}
                             </span>
                           )}
@@ -272,8 +272,23 @@ export default function PortalPage() {
         {activeTab === 'leads' && (
           <div>
             <div style={{ marginBottom: 32 }}>
-              <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>All My Leads</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>
+                All My Leads
+                <span title="Indigo badge = lead from influencer · Amber badge = transferred from team member" style={{ display: 'inline-flex', cursor: 'help' }}>
+                  <Info size={13} color="#8e8e95" />
+                </span>
+              </div>
               <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500 }}>Leads routed to you from your digital ID page and direct submissions.</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12, padding: '10px 14px', background: '#f8f8f9', border: '1px solid rgba(0,13,16,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>Influencer: Jane</span>
+                  <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>= from an influencer</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>Transferred from: Mark</span>
+                  <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>= transferred by admin</span>
+                </div>
+              </div>
             </div>
             {loading ? (
               <div style={{ textAlign: 'center', padding: '64px 0' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div>
@@ -300,12 +315,12 @@ export default function PortalPage() {
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                           {lead.sourceLabel && (
-                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            <span title="This lead was sent from an influencer's digital ID page" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                               {lead.sourceLabel}
                             </span>
                           )}
                           {lead.transferLabel && (
-                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            <span title="This lead was transferred from another team member by an admin" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                               {lead.transferLabel}
                             </span>
                           )}

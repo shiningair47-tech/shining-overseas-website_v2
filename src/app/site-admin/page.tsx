@@ -400,6 +400,16 @@ export default function SiteAdminPage() {
             {/* Leads Section */}
             <div>
               <div style={{ fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 24 }}>All Leads ({leads.length})</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16, padding: '10px 14px', background: '#f8f8f9', border: '1px solid rgba(0,13,16,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>Influencer: Jane</span>
+                  <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>= from an influencer</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>Transferred from: Mark</span>
+                  <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>= transferred by admin</span>
+                </div>
+              </div>
               <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
                 {leads.map((l, i) => (
                   <div key={l.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
@@ -414,12 +424,12 @@ export default function SiteAdminPage() {
                       <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{l.phone as string} · Owner: {l.owner as string} · {l.country as string}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                         {(l.sourceLabel as string) && (
-                          <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                          <span title="This lead was sent from an influencer's digital ID page" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                             {l.sourceLabel as string}
                           </span>
                         )}
                         {(l.transferLabel as string) && (
-                          <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                          <span title="This lead was transferred from another team member by an admin" style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
                             {l.transferLabel as string}
                           </span>
                         )}
