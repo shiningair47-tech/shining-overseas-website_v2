@@ -344,10 +344,41 @@ export async function listMyLeads(userId: string) {
       if (!source) source = ['HOMEPAGE','WEBSITE'].includes(ref) ? 'website' : 'influencer';
       const isHot = leadType === 'hot';
       const status = ((r.deployment_status as string) || 'LEAD').toUpperCase();
-      return { id: r.id, phone: r.phone_number, name: r.full_name || '', is_hot: isHot, status, source,
-        created: (r.created_date as string) || '', country: r.country_of_interest || '' };
+      // Parse labels
+      let sourceLabel = '';
+      let transferLabel = '';
+      const ownerMeta = (meta.owner || '').toLowerCase();
+      if (ownerMeta.includes('routed from influencer') || ownerMeta.includes('influencer:')) {
+        sourceLabel = (meta.owner || '').replace(/^Routed from /i, '');
+      }
+      if (meta.admin_transfer) {
+        transferLabel = `Transferred from: ${meta.new_owner || 'Unknown'}`;
+      }
+      return {
+        id: r.id, phone: r.phone_number, name: r.full_name || '', is_hot: isHot, status, source,
+        created: (r.created_date as string) || '', country: r.country_of_interest || '',
+        sourceLabel, transferLabel
+      };
     });
   } catch { return []; }
+}
+
+export async function countColdLeadsByReferralCode(referralCode: string): Promise<number> {
+  const c = getSupabaseClient(); if (!c) return 0;
+  if (!referralCode) return 0;
+  try {
+    const { data } = await c.from('candidates')
+      .select('notes')
+      .eq('referral_code', referralCode.toUpperCase())
+      .order('created_date', { ascending: false });
+    if (!data) return 0;
+    let count = 0;
+    for (const row of data) {
+      const meta = parseNotes((row.notes as string) || '');
+      if ((meta.lead_type || '').toLowerCase() === 'cold') count++;
+    }
+    return count;
+  } catch { return 0; }
 }
 
 export async function listMyInfluencers(teamMemberId: string) {

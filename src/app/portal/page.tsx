@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone } from 'lucide-react';
 
 interface User { id: string; email: string; role: string; full_name: string; phone_number: string; referral_code: string; status: string; tier: string; assigned_to: string; facebook_page: string }
-interface Lead { id: string; name: string; phone: string; is_hot: boolean; status: string; source: string; created: string; country: string }
+interface Lead { id: string; name: string; phone: string; is_hot: boolean; status: string; source: string; created: string; country: string; sourceLabel?: string; transferLabel?: string }
 interface Influencer { id: string; full_name: string; email: string; phone: string; referral_code: string; status: string; tier: string; public_link: string; total_leads: number; hot_leads: number; cold_leads: number; converted: number }
 
 export default function PortalPage() {
@@ -26,6 +26,7 @@ export default function PortalPage() {
   const [newInfPass, setNewInfPass] = useState('');
   const [addInfLoading, setAddInfLoading] = useState(false);
   const [addInfMsg, setAddInfMsg] = useState('');
+  const [coldLeadCount, setColdLeadCount] = useState(0);
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -42,13 +43,15 @@ export default function PortalPage() {
     if (!u) return;
     setLoading(true);
     try {
-      const [leadsRes, infRes] = await Promise.all([
+      const [leadsRes, infRes, coldRes] = await Promise.all([
         fetch(`/api/leads?my=${u.id}`),
         u.role === 'TEAM_MEMBER' ? fetch(`/api/leads?influencers=${u.id}`) : Promise.resolve(null),
+        u.referral_code ? fetch(`/api/leads?cold_count=${u.referral_code}`).then(r => r.json()) : Promise.resolve(null),
       ]);
       const leadsData = await leadsRes.json();
       setLeads(Array.isArray(leadsData) ? leadsData : []);
       if (infRes) { const infData = await infRes.json(); setInfluencers(Array.isArray(infData) ? infData : []); }
+      if (coldRes) setColdLeadCount((coldRes as { count: number }).count || 0);
     } catch {}
     setLoading(false);
   }, []);
@@ -106,7 +109,7 @@ export default function PortalPage() {
   const isTeam = user.role === 'TEAM_MEMBER';
   const tier = (user.tier || '').toUpperCase();
   const hotLeads = leads.filter(l => l.is_hot);
-  const coldLeads = leads.filter(l => !l.is_hot);
+  const coldLeads = isTeam ? leads.filter(l => !l.is_hot) : [];
   const converted = leads.filter(l => l.status === 'DEPLOYED');
   const publicLink = user.referral_code ? `${typeof window !== 'undefined' ? window.location.origin : ''}/p/${user.referral_code}` : '';
 
@@ -204,9 +207,9 @@ export default function PortalPage() {
         {activeTab === 'overview' && (
           <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%,220px),1fr))', gap: 1, background: 'rgba(0,13,16,0.1)', marginBottom: 48 }}>
-              <Stat label="Total Leads" value={leads.length} />
+              <Stat label="Total Leads" value={isTeam ? leads.length : hotLeads.length + coldLeadCount} />
               <Stat label="Hot Leads" value={hotLeads.length} sub="Office visit requested" />
-              <Stat label="Cold Leads" value={coldLeads.length} />
+              <Stat label="Cold Leads" value={coldLeads.length || coldLeadCount} sub={!isTeam ? 'Routed to your team' : undefined} />
               <Stat label="Converted" value={converted.length} sub="Successfully deployed" />
               {isTeam && <Stat label="My Influencers" value={influencers.length} />}
             </div>
@@ -237,14 +240,25 @@ export default function PortalPage() {
               {leads.slice(0, 5).map(lead => (
                 <div key={lead.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 0', borderTop: '1px solid rgba(0,13,16,0.08)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <LeadBadge hot={lead.is_hot} />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {lead.name || '—'}
-                        {isNewLead(lead.created) && <NewBadge />}
+                    <LeadBadge hot={lead.is_hot} />                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {lead.name || '—'}
+                          {isNewLead(lead.created) && <NewBadge />}
+                        </div>
+                        <div style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500, marginTop: 2 }}>{lead.phone} · {lead.country || '—'}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                          {lead.sourceLabel && (
+                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                              {lead.sourceLabel}
+                            </span>
+                          )}
+                          {lead.transferLabel && (
+                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                              {lead.transferLabel}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500, marginTop: 2 }}>{lead.phone} · {lead.country || '—'}</div>
-                    </div>
                   </div>
                   <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{lead.created ? new Date(lead.created).toLocaleDateString() : '—'}</div>
                 </div>
@@ -283,6 +297,18 @@ export default function PortalPage() {
                           <Phone size={11} color="#8e8e95" />
                           <span style={{ fontSize: 12, color: '#8e8e95', fontWeight: 500 }}>{lead.phone}</span>
                           {lead.country && <span style={{ fontSize: 12, color: '#8e8e95' }}>· {lead.country}</span>}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                          {lead.sourceLabel && (
+                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                              {lead.sourceLabel}
+                            </span>
+                          )}
+                          {lead.transferLabel && (
+                            <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                              {lead.transferLabel}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
