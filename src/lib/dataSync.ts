@@ -304,9 +304,22 @@ export async function listLeads() {
       let path = '';
       if (source === 'website') path = '/';
       else if (ref && !['HOMEPAGE','WEBSITE','TEAM'].includes(ref)) path = `/p/${ref}`;
-      return { id: r.id, phone: r.phone_number, name: r.full_name || '', is_hot: isHot,
+      // Parse labels
+      let sourceLabel = '';
+      let transferLabel = '';
+      const ownerMeta = (meta.owner || '').toLowerCase();
+      if (ownerMeta.includes('routed from influencer') || ownerMeta.includes('influencer:')) {
+        sourceLabel = (meta.owner || '').replace(/^Routed from /i, '');
+      }
+      if (meta.admin_transfer) {
+        transferLabel = `Transferred from: ${meta.new_owner || 'Unknown'}`;
+      }
+      return {
+        id: r.id, phone: r.phone_number, name: r.full_name || '', is_hot: isHot,
         owner: ownerName, owner_id: ownerId, status, source, path, created,
-        country: r.country_of_interest || '', influencer_id: ownerId, referral_code: r.referral_code || '', notes };
+        country: r.country_of_interest || '', influencer_id: ownerId, referral_code: r.referral_code || '', notes,
+        sourceLabel, transferLabel
+      };
     });
   } catch { return []; }
 }

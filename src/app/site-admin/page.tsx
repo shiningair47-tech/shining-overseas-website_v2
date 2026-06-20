@@ -412,6 +412,18 @@ export default function SiteAdminPage() {
                         </div>
                       </div>
                       <div style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500 }}>{l.phone as string} · Owner: {l.owner as string} · {l.country as string}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                        {(l.sourceLabel as string) && (
+                          <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#eef2ff', color: '#4338ca', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            {l.sourceLabel as string}
+                          </span>
+                        )}
+                        {(l.transferLabel as string) && (
+                          <span style={{ padding: '2px 8px', borderRadius: 9999, fontSize: 9, fontWeight: 700, background: '#fef3c7', color: '#92400e', letterSpacing: '0.05em', lineHeight: 1.4 }}>
+                            {l.transferLabel as string}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
                       <span style={{ fontSize: 10, padding: '3px 8px', background: (l.status as string) === 'DEPLOYED' ? '#f0fdf4' : '#f8f8f9', color: (l.status as string) === 'DEPLOYED' ? '#16a34a' : '#8e8e95', fontWeight: 700, borderRadius: 9999, textTransform: 'uppercase' }}>{l.status as string}</span>
