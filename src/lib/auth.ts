@@ -42,7 +42,7 @@ export async function fetchUserByReferralCode(code: string): Promise<UserRecord 
   if (!client) return null;
   try {
     const { data } = await client.from('users')
-      .select('id,email,role,full_name,phone_number,referral_code,status,tier,assigned_to,facebook_page')
+      .select('id,email,password_hash,role,full_name,phone_number,referral_code,status,tier,assigned_to,facebook_page')
       .eq('referral_code', code).limit(1);
     return data?.[0] || null;
   } catch { return null; }
