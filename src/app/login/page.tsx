@@ -88,11 +88,8 @@ function LoginForm() {
             </div>
             <form onSubmit={handleSubmit}>
               <div style={{ marginBottom: 28 }}>
-                <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>
-                  {selectedRole === 'influencer' ? 'Referral Code' : 'Email Address'}
-                </label>
-                <input name="email" type={selectedRole === 'influencer' ? 'text' : 'email'}
-                  placeholder={selectedRole === 'influencer' ? 'Your referral code (e.g. ABCD1234)' : 'you@example.com'}
+                <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Email Address</label>
+                <input name="email" type="email" placeholder="you@example.com"
                   required style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
               </div>
               <div style={{ marginBottom: 32 }}>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchUserByEmail, fetchUserByReferralCode, verifyPassword } from '@/lib/auth';
+import { fetchUserByEmail, verifyPassword } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -8,19 +8,12 @@ export async function POST(req: Request) {
 
     let user = null;
 
-    if (role === 'influencer') {
-      // Influencers log in via referral code
-      const code = (email || '').trim().toUpperCase();
-      user = await fetchUserByReferralCode(code);
-      if (!user) return NextResponse.json({ error: 'Invalid referral code or password.' }, { status: 401 });
-      if (user.role !== 'INFLUENCER') return NextResponse.json({ error: 'This code is not an influencer account.' }, { status: 401 });
-    } else {
-      // Admin / Team login via email
-      user = await fetchUserByEmail(email || '');
-      if (!user) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
-      if (role === 'admin' && user.role !== 'ADMIN') return NextResponse.json({ error: 'Not an admin account.' }, { status: 401 });
-      if (role === 'team' && user.role !== 'TEAM_MEMBER') return NextResponse.json({ error: 'Not a team member account.' }, { status: 401 });
-    }
+    // All roles login via email
+    user = await fetchUserByEmail(email || '');
+    if (!user) return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
+    if (role === 'admin' && user.role !== 'ADMIN') return NextResponse.json({ error: 'Not an admin account.' }, { status: 401 });
+    if (role === 'team' && user.role !== 'TEAM_MEMBER') return NextResponse.json({ error: 'Not a team member account.' }, { status: 401 });
+    if (role === 'influencer' && user.role !== 'INFLUENCER') return NextResponse.json({ error: 'Not an influencer account.' }, { status: 401 });
 
     const hash = (user as unknown as Record<string, string>).password_hash || '';
     if (!verifyPassword(password, hash)) {
