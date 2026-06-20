@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plane, Plus, X, Check, LoaderCircle, Pencil, Trash2, ToggleLeft, ToggleRight, ArrowRight, LogOut, Copy, CheckCheck, RefreshCw } from 'lucide-react';
+import { Plane, Plus, X, Check, LoaderCircle, Pencil, Trash2, ToggleLeft, ToggleRight, ArrowRight, LogOut, Copy, CheckCheck, RefreshCw, Search } from 'lucide-react';
 
 interface User { id: string; email: string; role: string; full_name: string; phone_number: string; referral_code: string; status: string; tier: string; facebook_page: string }
 
@@ -64,6 +64,8 @@ export default function SiteAdminPage() {
   const [copied, setCopied] = useState('');
   const [settingsSaveMsg, setSettingsSaveMsg] = useState('');
   const [leadDateFilter, setLeadDateFilter] = useState('all');
+  const [leadStatusFilter, setLeadStatusFilter] = useState('all');
+  const [leadSearchQuery, setLeadSearchQuery] = useState('');
   const [leadSortOrder, setLeadSortOrder] = useState('newest');
 
   useEffect(() => {
@@ -195,18 +197,28 @@ export default function SiteAdminPage() {
     return diff < days * 24 * 60 * 60 * 1000;
   };
 
+  const leadUniqueStatuses = useMemo(() => {
+    const set = new Set(leads.map(l => (l.status as string)).filter(Boolean));
+    return Array.from(set).sort();
+  }, [leads]);
+
   const filteredLeads = useMemo(() => {
     let result = [...leads];
     if (leadDateFilter === '7d') result = result.filter(l => isWithinDays(l.created as string, 7));
     else if (leadDateFilter === '30d') result = result.filter(l => isWithinDays(l.created as string, 30));
     else if (leadDateFilter === '90d') result = result.filter(l => isWithinDays(l.created as string, 90));
+    if (leadStatusFilter !== 'all') result = result.filter(l => (l.status as string) === leadStatusFilter);
+    if (leadSearchQuery.trim()) {
+      const q = leadSearchQuery.trim().toLowerCase();
+      result = result.filter(l => ((l.name as string) || '').toLowerCase().includes(q) || ((l.phone as string) || '').includes(q));
+    }
     result.sort((a, b) => {
       const da = a.created ? new Date(a.created as string).getTime() : 0;
       const db = b.created ? new Date(b.created as string).getTime() : 0;
       return leadSortOrder === 'newest' ? db - da : da - db;
     });
     return result;
-  }, [leads, leadDateFilter, leadSortOrder]);
+  }, [leads, leadDateFilter, leadStatusFilter, leadSearchQuery, leadSortOrder]);
 
   const formatLeadDate = (created: string) => {
     if (!created) return '—';
@@ -215,6 +227,28 @@ export default function SiteAdminPage() {
     const suffix = day >= 11 && day <= 13 ? 'th' : ['st','nd','rd'][(day - 1) % 10] || 'th';
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${day}${suffix} ${months[d.getMonth()]}`;
+  };
+
+  const downloadCSV = () => {
+    const headers = ['Name','Phone','Country','Owner','Status','Lead Type','Source','Source Label','Transfer Label','Created','Influencer ID'];
+    const rows = filteredLeads.map(l => [
+      `"${((l.name as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.phone as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.country as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.owner as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.status as string) || '').replace(/"/g, '""')}"`,
+      (l.is_hot as boolean) ? 'HOT' : 'COLD',
+      `"${((l.source as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.sourceLabel as string) || '').replace(/"/g, '""')}"`,
+      `"${((l.transferLabel as string) || '').replace(/"/g, '""')}"`,
+      l.created ? formatLeadDate(l.created as string) : '—',
+      `"${((l.influencer_id as string) || '').replace(/"/g, '""')}"`
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `all-leads-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
   const handleConvertLead = async (leadId: string) => {
@@ -442,14 +476,29 @@ export default function SiteAdminPage() {
               </div>
               {/* Filter & Sort Bar */}
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={14} color="#8e8e95" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                    <input type="text" value={leadSearchQuery} onChange={e => setLeadSearchQuery(e.target.value)} placeholder="Search name or phone..."
+                      style={{ padding: '6px 12px 6px 34px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', fontSize: 11, fontWeight: 500, outline: 'none', width: 180, boxSizing: 'border-box' }} />
+                  </div>
                   {[['all', 'All time'], ['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']].map(([key, label]) => (
                     <button key={key} onClick={() => setLeadDateFilter(key)} style={{ padding: '6px 14px', border: `1px solid ${leadDateFilter === key ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: leadDateFilter === key ? '#000d10' : 'transparent', color: leadDateFilter === key ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', transition: 'all 0.15s' }}>{label}</button>
                   ))}
+                  <select value={leadStatusFilter} onChange={e => setLeadStatusFilter(e.target.value)}
+                    style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: leadStatusFilter === 'all' ? '#8e8e95' : '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', outline: 'none', appearance: 'none', paddingRight: 28, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                    <option value="all">All Status</option>
+                    {leadUniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
-                <button onClick={() => setLeadSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
-                  {leadSortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
-                </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => setLeadSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                      {leadSortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
+                    </button>
+                    <button onClick={downloadCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid #bc7155', borderRadius: 9999, background: 'transparent', color: '#bc7155', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                      ↓ CSV
+                    </button>
+                  </div>
               </div>
               <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
                 {filteredLeads.length === 0 ? (

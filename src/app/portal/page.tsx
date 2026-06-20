@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone, Info } from 'lucide-react';
+import { Plane, ArrowRight, LogOut, Users, Target, TrendingUp, Copy, CheckCheck, Plus, X, LoaderCircle, Link2, Phone, Info, Search } from 'lucide-react';
 
 interface User { id: string; email: string; role: string; full_name: string; phone_number: string; referral_code: string; status: string; tier: string; assigned_to: string; facebook_page: string }
 interface Lead { id: string; name: string; phone: string; is_hot: boolean; status: string; source: string; created: string; country: string; sourceLabel?: string; transferLabel?: string }
@@ -28,6 +28,8 @@ export default function PortalPage() {
   const [addInfMsg, setAddInfMsg] = useState('');
   const [coldLeadCount, setColdLeadCount] = useState(0);
   const [dateFilter, setDateFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
 
   useEffect(() => {
@@ -127,6 +129,11 @@ export default function PortalPage() {
     </div>
   );
 
+  const uniqueStatuses = useMemo(() => {
+    const set = new Set(leads.map(l => l.status).filter(Boolean));
+    return Array.from(set).sort();
+  }, [leads]);
+
   const isWithinDays = (created: string, days: number) => {
     if (!created) return false;
     const diff = Date.now() - new Date(created).getTime();
@@ -135,10 +142,17 @@ export default function PortalPage() {
 
   const filteredLeads = useMemo(() => {
     let result = [...leads];
-    // Filter
+    // Filter by date
     if (dateFilter === '7d') result = result.filter(l => isWithinDays(l.created, 7));
     else if (dateFilter === '30d') result = result.filter(l => isWithinDays(l.created, 30));
     else if (dateFilter === '90d') result = result.filter(l => isWithinDays(l.created, 90));
+    // Filter by status
+    if (statusFilter !== 'all') result = result.filter(l => l.status === statusFilter);
+    // Search by name or phone
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(l => (l.name || '').toLowerCase().includes(q) || (l.phone || '').includes(q));
+    }
     // Sort
     result.sort((a, b) => {
       const da = a.created ? new Date(a.created).getTime() : 0;
@@ -146,7 +160,7 @@ export default function PortalPage() {
       return sortOrder === 'newest' ? db - da : da - db;
     });
     return result;
-  }, [leads, dateFilter, sortOrder]);
+  }, [leads, dateFilter, statusFilter, searchQuery, sortOrder]);
 
   const isNewLead = (created: string) => {
     if (!created) return false;
@@ -165,6 +179,26 @@ export default function PortalPage() {
     const suffix = day >= 11 && day <= 13 ? 'th' : ['st','nd','rd'][(day - 1) % 10] || 'th';
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${day}${suffix} ${months[d.getMonth()]}`;
+  };
+
+  const downloadCSV = () => {
+    const headers = ['Name','Phone','Country','Status','Lead Type','Source','Source Label','Transfer Label','Created'];
+    const rows = filteredLeads.map(l => [
+      `"${(l.name || '').replace(/"/g, '""')}"`,
+      `"${(l.phone || '').replace(/"/g, '""')}"`,
+      `"${(l.country || '').replace(/"/g, '""')}"`,
+      `"${(l.status || '').replace(/"/g, '""')}"`,
+      l.is_hot ? 'HOT' : 'COLD',
+      `"${(l.source || '').replace(/"/g, '""')}"`,
+      `"${(l.sourceLabel || '').replace(/"/g, '""')}"`,
+      `"${(l.transferLabel || '').replace(/"/g, '""')}"`,
+      l.created ? formatLeadDate(l.created) : '—'
+    ]);
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `leads-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   };
 
   const NewBadge = () => (
@@ -328,14 +362,29 @@ export default function PortalPage() {
               <div>
                 {/* Filter & Sort Bar */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+                    <div style={{ position: 'relative' }}>
+                      <Search size={14} color="#8e8e95" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+                      <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search name or phone..."
+                        style={{ padding: '6px 12px 6px 34px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', fontSize: 11, fontWeight: 500, outline: 'none', width: 180, boxSizing: 'border-box' }} />
+                    </div>
                     {[['all', 'All time'], ['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days']].map(([key, label]) => (
                       <button key={key} onClick={() => setDateFilter(key)} style={{ padding: '6px 14px', border: `1px solid ${dateFilter === key ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: dateFilter === key ? '#000d10' : 'transparent', color: dateFilter === key ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', transition: 'all 0.15s' }}>{label}</button>
                     ))}
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: statusFilter === 'all' ? '#8e8e95' : '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', outline: 'none', appearance: 'none', paddingRight: 28, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}>
+                      <option value="all">All Status</option>
+                      {uniqueStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
                   </div>
-                  <button onClick={() => setSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
-                    {sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
-                  </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => setSortOrder(s => s === 'newest' ? 'oldest' : 'newest')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                      {sortOrder === 'newest' ? '↓ Newest' : '↑ Oldest'}
+                    </button>
+                    <button onClick={downloadCSV} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', border: '1px solid #bc7155', borderRadius: 9999, background: 'transparent', color: '#bc7155', cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                      ↓ CSV
+                    </button>
+                  </div>
                 </div>
                 {filteredLeads.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '96px 0', border: '1px solid rgba(0,13,16,0.1)' }}>
