@@ -15,7 +15,6 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [hasVisitDate, setHasVisitDate] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -89,13 +88,12 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'submit', full_name: name, phone_number: phone,
-          country: showOtherCountry ? otherCountry : (fd.get('country') as string || ''), source: `profile:${slug}`,
-          owner_user: ownerUser, has_visit_date: hasVisitDate,
-          visit_date: fd.get('visit_date') || '', message: fd.get('message') || '',
+          country: showOtherCountry ? otherCountry : (fd.get('country') as string || ''), source: `profile:${slug}`,owner_user: ownerUser, has_visit_date: false,
+            visit_date: '', message: fd.get('message') || '',
         }),
       });
       const data = await res.json();
-      if (data.ok) { setFormSubmitted(true); (e.target as HTMLFormElement).reset(); setHasVisitDate(false); }
+      if (data.ok) { setFormSubmitted(true); (e.target as HTMLFormElement).reset(); }
       else setFormError(data.msg || 'Could not submit.');
     } catch { setFormError('Network error. Please try again.'); }
     setFormLoading(false);
@@ -287,18 +285,7 @@ export default function PublicProfilePage({ params }: { params: { slug: string }
                   )}
 
                   </div>
-                  <div style={{ marginBottom: 24, padding: '16px', background: '#f8f8f9', border: '1px solid rgba(0,13,16,0.08)' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                      <input type="checkbox" checked={hasVisitDate} onChange={e => setHasVisitDate(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
-                      <span style={{ fontSize: 13, color: '#000d10', fontWeight: 600 }}>I want to visit the office on a specific date</span>
-                    </label>
-                    {hasVisitDate && (
-                      <div style={{ marginTop: 16 }}>
-                        <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Preferred Visit Date</label>
-                        <input name="visit_date" type="date" style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
-                      </div>
-                    )}
-                  </div>
+
                   <div style={{ marginBottom: 32 }}>
                     <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Message (optional)</label>
                     <textarea name="message" placeholder="Tell us about your situation..." rows={3} style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, resize: 'none', boxSizing: 'border-box' }} />
