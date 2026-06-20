@@ -67,6 +67,8 @@ export default function SiteAdminPage() {
   const [leadStatusFilter, setLeadStatusFilter] = useState('all');
   const [leadSearchQuery, setLeadSearchQuery] = useState('');
   const [leadSortOrder, setLeadSortOrder] = useState('newest');
+  const [leadPage, setLeadPage] = useState(0);
+  const LEAD_PAGE_SIZE = 20;
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -219,6 +221,13 @@ export default function SiteAdminPage() {
     });
     return result;
   }, [leads, leadDateFilter, leadStatusFilter, leadSearchQuery, leadSortOrder]);
+
+  const leadTotalPages = Math.max(1, Math.ceil(filteredLeads.length / LEAD_PAGE_SIZE));
+  const leadSafePage = Math.min(leadPage, leadTotalPages - 1);
+  const paginatedLeads = filteredLeads.slice(leadSafePage * LEAD_PAGE_SIZE, (leadSafePage + 1) * LEAD_PAGE_SIZE);
+
+  // Reset page when filters change
+  useEffect(() => { setLeadPage(0); }, [leadDateFilter, leadStatusFilter, leadSearchQuery]);
 
   const formatLeadDate = (created: string) => {
     if (!created) return '—';
@@ -503,7 +512,9 @@ export default function SiteAdminPage() {
               <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
                 {filteredLeads.length === 0 ? (
                   <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No leads match this filter.</div>
-                ) : filteredLeads.map((l, i) => (
+                ) : (
+                  <>
+                {paginatedLeads.map((l, i) => (
                   <div key={l.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -538,6 +549,22 @@ export default function SiteAdminPage() {
                     </div>
                   </div>
                 ))}
+                {/* Pagination */}
+                {leadTotalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setLeadPage(p => Math.max(0, p - 1))} disabled={leadSafePage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: leadSafePage === 0 ? '#d5d3d4' : '#000d10', cursor: leadSafePage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: leadSafePage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: leadTotalPages }, (_, i) => (
+                      <button key={i} onClick={() => setLeadPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === leadSafePage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === leadSafePage ? '#000d10' : 'transparent', color: i === leadSafePage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setLeadPage(p => Math.min(leadTotalPages - 1, p + 1))} disabled={leadSafePage === leadTotalPages - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: leadSafePage === leadTotalPages - 1 ? '#d5d3d4' : '#000d10', cursor: leadSafePage === leadTotalPages - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: leadSafePage === leadTotalPages - 1 ? 0.5 : 1 }}>Next →</button>
+                    <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{filteredLeads.length} total</span>
+                  </div>
+                )}
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -31,6 +31,8 @@ export default function PortalPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [leadPage, setLeadPage] = useState(0);
+  const LEAD_PAGE_SIZE = 20;
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -161,6 +163,13 @@ export default function PortalPage() {
     });
     return result;
   }, [leads, dateFilter, statusFilter, searchQuery, sortOrder]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / LEAD_PAGE_SIZE));
+  const safePage = Math.min(leadPage, totalPages - 1);
+  const paginatedLeads = filteredLeads.slice(safePage * LEAD_PAGE_SIZE, (safePage + 1) * LEAD_PAGE_SIZE);
+
+  // Reset page when filters change
+  useEffect(() => { setLeadPage(0); }, [dateFilter, statusFilter, searchQuery]);
 
   const isNewLead = (created: string) => {
     if (!created) return false;
@@ -393,7 +402,7 @@ export default function PortalPage() {
                   </div>
                 ) : (
                 <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-                {filteredLeads.map((lead, i) => (
+                {paginatedLeads.map((lead, i) => (
                   <div key={lead.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <LeadBadge hot={lead.is_hot} />
@@ -431,6 +440,20 @@ export default function PortalPage() {
                   </div>
                 ))}
               </div>
+                )}
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '20px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setLeadPage(p => Math.max(0, p - 1))} disabled={safePage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: safePage === 0 ? '#d5d3d4' : '#000d10', cursor: safePage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: safePage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <button key={i} onClick={() => setLeadPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === safePage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === safePage ? '#000d10' : 'transparent', color: i === safePage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setLeadPage(p => Math.min(totalPages - 1, p + 1))} disabled={safePage === totalPages - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: safePage === totalPages - 1 ? '#d5d3d4' : '#000d10', cursor: safePage === totalPages - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: safePage === totalPages - 1 ? 0.5 : 1 }}>Next →</button>
+                    <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{filteredLeads.length} total</span>
+                  </div>
                 )}
               </div>
             )}
