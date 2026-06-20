@@ -166,6 +166,8 @@ export async function loadProfileMetadata(userId: string) {
   return out;
 }
 
+const CHUNK_SIZE = 8000;
+
 export async function saveProfileMetadata(userId: string, data: Record<string, string>): Promise<boolean> {
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
   const c = getSupabaseClient(); if (!c) return false;
@@ -177,8 +179,18 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
       // Delete old rows for this field (both old chunked format and single-row format)
       await c.from('settings').delete().like('key', `${prefix}%`);
       
-      // Store as a single row — text column supports up to 1GB
-      await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
+      if (value.length <= CHUNK_SIZE) {
+        // Small value — store as a single row
+        await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
+      } else {
+        // Large value — split into chunks to avoid column size limits
+        const rows: { key: string; value: string }[] = [];
+        for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+          rows.push({ key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
+        }
+        rows.push({ key: `${prefix}:count`, value: String(rows.length) });
+        await c.from('settings').insert(rows);
+      }
     }
     return true;
   } catch { return false; }
