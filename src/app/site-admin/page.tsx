@@ -68,9 +68,15 @@ export default function SiteAdminPage() {
   const [leadSearchQuery, setLeadSearchQuery] = useState('');
   const [leadSortOrder, setLeadSortOrder] = useState('newest');
   const [leadPage, setLeadPage] = useState(0);
-  const LEAD_PAGE_SIZE = 20;
+  const [leadPageSize, setLeadPageSize] = useState(20);
+  const [circularsPage, setCircularsPage] = useState(0);
+  const [flightsPage, setFlightsPage] = useState(0);
+  const [awardsPage, setAwardsPage] = useState(0);
+  const [testimonialsPage, setTestimonialsPage] = useState(0);
+  const [digitalIdsPage, setDigitalIdsPage] = useState(0);
+  const [siteSettingsPage, setSiteSettingsPage] = useState(0);
   const [accountPage, setAccountPage] = useState(0);
-  const ACCOUNT_PAGE_SIZE = 20;
+  const [adminPageSize, setAdminPageSize] = useState(20);
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -224,9 +230,9 @@ export default function SiteAdminPage() {
     return result;
   }, [leads, leadDateFilter, leadStatusFilter, leadSearchQuery, leadSortOrder]);
 
-  const leadTotalPages = Math.max(1, Math.ceil(filteredLeads.length / LEAD_PAGE_SIZE));
+  const leadTotalPages = Math.max(1, Math.ceil(filteredLeads.length / leadPageSize));
   const leadSafePage = Math.min(leadPage, leadTotalPages - 1);
-  const paginatedLeads = filteredLeads.slice(leadSafePage * LEAD_PAGE_SIZE, (leadSafePage + 1) * LEAD_PAGE_SIZE);
+  const paginatedLeads = filteredLeads.slice(leadSafePage * leadPageSize, (leadSafePage + 1) * leadPageSize);
 
   // Reset page when filters change
   useEffect(() => { setLeadPage(0); }, [leadDateFilter, leadStatusFilter, leadSearchQuery]);
@@ -334,8 +340,12 @@ export default function SiteAdminPage() {
               <button onClick={() => openModal('circular')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Add Circular</button>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                circulars.map((c, i) => (
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const t = Math.max(1, Math.ceil(circulars.length / adminPageSize));
+                  const s = Math.min(circularsPage, t - 1);
+                  return circulars.slice(s * adminPageSize, (s + 1) * adminPageSize).map((c, i) => (
                   <div key={c.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 200 }}>
                       <span style={{ fontSize: 24 }}>{c.flag as string}</span>
@@ -352,9 +362,29 @@ export default function SiteAdminPage() {
                       <ActionBtn onClick={() => handleDelete('circulars', c.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
                   </div>
-                ))
-              }
-              {!loading && circulars.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No circulars yet.</div>}
+                  ));
+                })()}
+                {circulars.length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setCircularsPage(p => Math.max(0, p - 1))} disabled={circularsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: circularsPage === 0 ? '#d5d3d4' : '#000d10', cursor: circularsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: circularsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(circulars.length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setCircularsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === circularsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === circularsPage ? '#000d10' : 'transparent', color: i === circularsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setCircularsPage(p => Math.min(Math.ceil(circulars.length / adminPageSize) - 1, p + 1))} disabled={circularsPage >= Math.ceil(circulars.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: circularsPage >= Math.ceil(circulars.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: circularsPage >= Math.ceil(circulars.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: circularsPage >= Math.ceil(circulars.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setCircularsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {!loading && circulars.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No circulars yet.</div>}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -367,8 +397,12 @@ export default function SiteAdminPage() {
               <button onClick={() => openModal('flight')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Add Flight</button>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                flights.map((f, i) => (
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const t = Math.max(1, Math.ceil(flights.length / adminPageSize));
+                  const s = Math.min(flightsPage, t - 1);
+                  return flights.slice(s * adminPageSize, (s + 1) * adminPageSize).map((f, i) => (
                   <div key={f.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{f.origin as string} → {f.destination as string} · {f.flight_date as string}</div>
@@ -379,9 +413,29 @@ export default function SiteAdminPage() {
                       <ActionBtn onClick={() => handleDelete('flights', f.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
                   </div>
-                ))
-              }
-              {!loading && flights.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No flights yet.</div>}
+                  ));
+                })()}
+                {flights.length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setFlightsPage(p => Math.max(0, p - 1))} disabled={flightsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: flightsPage === 0 ? '#d5d3d4' : '#000d10', cursor: flightsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: flightsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(flights.length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setFlightsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === flightsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === flightsPage ? '#000d10' : 'transparent', color: i === flightsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setFlightsPage(p => Math.min(Math.ceil(flights.length / adminPageSize) - 1, p + 1))} disabled={flightsPage >= Math.ceil(flights.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: flightsPage >= Math.ceil(flights.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: flightsPage >= Math.ceil(flights.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: flightsPage >= Math.ceil(flights.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setFlightsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {!loading && flights.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No flights yet.</div>}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -394,8 +448,12 @@ export default function SiteAdminPage() {
               <button onClick={() => openModal('award')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Add Award</button>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                awards.map((a, i) => (
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const t = Math.max(1, Math.ceil(awards.length / adminPageSize));
+                  const s = Math.min(awardsPage, t - 1);
+                  return awards.slice(s * adminPageSize, (s + 1) * adminPageSize).map((a, i) => (
                   <div key={a.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{a.title as string} <span style={{ color: '#bc7155', fontWeight: 500 }}>· {a.year as string}</span></div>
@@ -406,9 +464,29 @@ export default function SiteAdminPage() {
                       <ActionBtn onClick={() => handleDelete('awards', a.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
                   </div>
-                ))
-              }
-              {!loading && awards.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No awards yet.</div>}
+                  ));
+                })()}
+                {awards.length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setAwardsPage(p => Math.max(0, p - 1))} disabled={awardsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: awardsPage === 0 ? '#d5d3d4' : '#000d10', cursor: awardsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: awardsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(awards.length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setAwardsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === awardsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === awardsPage ? '#000d10' : 'transparent', color: i === awardsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setAwardsPage(p => Math.min(Math.ceil(awards.length / adminPageSize) - 1, p + 1))} disabled={awardsPage >= Math.ceil(awards.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: awardsPage >= Math.ceil(awards.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: awardsPage >= Math.ceil(awards.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: awardsPage >= Math.ceil(awards.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setAwardsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {!loading && awards.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No awards yet.</div>}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -421,24 +499,48 @@ export default function SiteAdminPage() {
               <button onClick={() => openModal('testimonial')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Add Testimonial</button>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                testimonials.map((t, i) => (
-                  <div key={t.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const t = Math.max(1, Math.ceil(testimonials.length / adminPageSize));
+                  const s = Math.min(testimonialsPage, t - 1);
+                  return testimonials.slice(s * adminPageSize, (s + 1) * adminPageSize).map((tm, i) => (
+                  <div key={tm.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{t.name as string} <span style={{ color: '#8e8e95', fontWeight: 500 }}>· {t.country as string}</span></div>
-                      <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>&ldquo;{t.quote as string}&rdquo;</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{tm.name as string} <span style={{ color: '#8e8e95', fontWeight: 500 }}>· {tm.country as string}</span></div>
+                      <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500, maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>&ldquo;{tm.quote as string}&rdquo;</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <button onClick={() => handleToggle('testimonials', t.id as string, 'is_featured', t.is_featured)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: t.is_featured ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
-                        {t.is_featured ? <ToggleRight size={18} /> : <ToggleLeft size={18} />} {t.is_featured ? 'FEATURED' : 'HIDDEN'}
+                      <button onClick={() => handleToggle('testimonials', tm.id as string, 'is_featured', tm.is_featured)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tm.is_featured ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
+                        {tm.is_featured ? <ToggleRight size={18} /> : <ToggleLeft size={18} />} {tm.is_featured ? 'FEATURED' : 'HIDDEN'}
                       </button>
-                      <ActionBtn onClick={() => openModal('testimonial', t)} icon={Pencil} label="Edit" />
-                      <ActionBtn onClick={() => handleDelete('testimonials', t.id as string)} icon={Trash2} label="Delete" variant="danger" />
+                      <ActionBtn onClick={() => openModal('testimonial', tm)} icon={Pencil} label="Edit" />
+                      <ActionBtn onClick={() => handleDelete('testimonials', tm.id as string)} icon={Trash2} label="Delete" variant="danger" />
                     </div>
                   </div>
-                ))
-              }
-              {!loading && testimonials.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No testimonials yet.</div>}
+                  ));
+                })()}
+                {testimonials.length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setTestimonialsPage(p => Math.max(0, p - 1))} disabled={testimonialsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: testimonialsPage === 0 ? '#d5d3d4' : '#000d10', cursor: testimonialsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: testimonialsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(testimonials.length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setTestimonialsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === testimonialsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === testimonialsPage ? '#000d10' : 'transparent', color: i === testimonialsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setTestimonialsPage(p => Math.min(Math.ceil(testimonials.length / adminPageSize) - 1, p + 1))} disabled={testimonialsPage >= Math.ceil(testimonials.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: testimonialsPage >= Math.ceil(testimonials.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: testimonialsPage >= Math.ceil(testimonials.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: testimonialsPage >= Math.ceil(testimonials.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setTestimonialsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {!loading && testimonials.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No testimonials yet.</div>}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -454,9 +556,9 @@ export default function SiteAdminPage() {
               {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
                 <>
                 {(() => {
-                  const accTotal = Math.max(1, Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE));
+                  const accTotal = Math.max(1, Math.ceil(accounts.length / adminPageSize));
                   const accSafe = Math.min(accountPage, accTotal - 1);
-                  return accounts.slice(accSafe * ACCOUNT_PAGE_SIZE, (accSafe + 1) * ACCOUNT_PAGE_SIZE).map((a, i) => (
+                  return accounts.slice(accSafe * adminPageSize, (accSafe + 1) * adminPageSize).map((a, i) => (
                   <div key={a.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{a.full_name as string}</div>
@@ -473,17 +575,23 @@ export default function SiteAdminPage() {
                   </div>
                   ));
                 })()}
-                {accounts.length > ACCOUNT_PAGE_SIZE && (
+                {accounts.length > adminPageSize && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
                     <button onClick={() => setAccountPage(p => Math.max(0, p - 1))} disabled={accountPage === 0}
                       style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: accountPage === 0 ? '#d5d3d4' : '#000d10', cursor: accountPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: accountPage === 0 ? 0.5 : 1 }}>← Prev</button>
-                    {Array.from({ length: Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) }, (_, i) => (
+                    {Array.from({ length: Math.ceil(accounts.length / adminPageSize) }, (_, i) => (
                       <button key={i} onClick={() => setAccountPage(i)}
                         style={{ padding: '6px 12px', border: `1px solid ${i === accountPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === accountPage ? '#000d10' : 'transparent', color: i === accountPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
                     ))}
-                    <button onClick={() => setAccountPage(p => Math.min(Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1, p + 1))} disabled={accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1}
-                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? '#d5d3d4' : '#000d10', cursor: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: accountPage >= Math.ceil(accounts.length / ACCOUNT_PAGE_SIZE) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <button onClick={() => setAccountPage(p => Math.min(Math.ceil(accounts.length / adminPageSize) - 1, p + 1))} disabled={accountPage >= Math.ceil(accounts.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: accountPage >= Math.ceil(accounts.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: accountPage >= Math.ceil(accounts.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: accountPage >= Math.ceil(accounts.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
                     <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{accounts.length} total</span>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setAccountPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
                   </div>
                 )}
                 {!loading && accounts.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No accounts yet.</div>}
@@ -582,6 +690,12 @@ export default function SiteAdminPage() {
                     <button onClick={() => setLeadPage(p => Math.min(leadTotalPages - 1, p + 1))} disabled={leadSafePage === leadTotalPages - 1}
                       style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: leadSafePage === leadTotalPages - 1 ? '#d5d3d4' : '#000d10', cursor: leadSafePage === leadTotalPages - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: leadSafePage === leadTotalPages - 1 ? 0.5 : 1 }}>Next →</button>
                     <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{filteredLeads.length} total</span>
+                    <select value={leadPageSize} onChange={e => { setLeadPageSize(Number(e.target.value)); setLeadPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
                   </div>
                 )}
                   </>
@@ -596,32 +710,56 @@ export default function SiteAdminPage() {
           <div>
             <div style={{ fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 24 }}>Digital ID Pages ({digitalIds.length})</div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
-              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> :
-                digitalIds.map((d, i) => {
-                  const link = `/p/${d.slug as string}`;
-                  return (
-                    <div key={d.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
-                      <div style={{ flex: 1, minWidth: 200 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{d.name as string}</div>
-                        <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>{d.specialty as string} · Code: {d.slug as string}</div>
-                        <div style={{ fontSize: 11, color: '#bc7155', marginTop: 4, fontWeight: 500 }}>{link}</div>
+              {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
+                <>
+                {(() => {
+                  const dt = Math.max(1, Math.ceil(digitalIds.length / adminPageSize));
+                  const ds = Math.min(digitalIdsPage, dt - 1);
+                  return digitalIds.slice(ds * adminPageSize, (ds + 1) * adminPageSize).map((d, i) => {
+                    const link = `/p/${d.slug as string}`;
+                    return (
+                      <div key={d.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{d.name as string}</div>
+                          <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>{d.specialty as string} · Code: {d.slug as string}</div>
+                          <div style={{ fontSize: 11, color: '#bc7155', marginTop: 4, fontWeight: 500 }}>{link}</div>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                          <button onClick={() => handleToggle('digital_id', d.id as string, 'is_active', d.is_active)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: d.is_active ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
+                            {d.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />} {d.is_active ? 'ACTIVE' : 'OFF'}
+                          </button>
+                          <button onClick={() => handleCopy(`${typeof window !== 'undefined' ? window.location.origin : ''}${link}`, `did_${d.id}`)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied === `did_${d.id}` ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600 }}>
+                            {copied === `did_${d.id}` ? <CheckCheck size={14} /> : <Copy size={14} />} Copy Link
+                          </button>
+                          <a href={link} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#000d10', textDecoration: 'none', padding: '6px 10px', border: '1px solid rgba(0,13,16,0.1)', borderRadius: 6 }}>
+                            <ArrowRight size={12} /> View
+                          </a>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                        <button onClick={() => handleToggle('digital_id', d.id as string, 'is_active', d.is_active)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: d.is_active ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}>
-                          {d.is_active ? <ToggleRight size={18} /> : <ToggleLeft size={18} />} {d.is_active ? 'ACTIVE' : 'OFF'}
-                        </button>
-                        <button onClick={() => handleCopy(`${typeof window !== 'undefined' ? window.location.origin : ''}${link}`, `did_${d.id}`)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied === `did_${d.id}` ? '#16a34a' : '#8e8e95', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600 }}>
-                          {copied === `did_${d.id}` ? <CheckCheck size={14} /> : <Copy size={14} />} Copy Link
-                        </button>
-                        <a href={link} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#000d10', textDecoration: 'none', padding: '6px 10px', border: '1px solid rgba(0,13,16,0.1)', borderRadius: 6 }}>
-                          <ArrowRight size={12} /> View
-                        </a>
-                      </div>
-                    </div>
-                  );
-                })
-              }
-              {!loading && digitalIds.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No digital ID pages yet. Create accounts to generate pages.</div>}
+                    );
+                  });
+                })()}
+                {digitalIds.length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 24px', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
+                    <button onClick={() => setDigitalIdsPage(p => Math.max(0, p - 1))} disabled={digitalIdsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: digitalIdsPage === 0 ? '#d5d3d4' : '#000d10', cursor: digitalIdsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: digitalIdsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(digitalIds.length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setDigitalIdsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === digitalIdsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === digitalIdsPage ? '#000d10' : 'transparent', color: i === digitalIdsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setDigitalIdsPage(p => Math.min(Math.ceil(digitalIds.length / adminPageSize) - 1, p + 1))} disabled={digitalIdsPage >= Math.ceil(digitalIds.length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: digitalIdsPage >= Math.ceil(digitalIds.length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: digitalIdsPage >= Math.ceil(digitalIds.length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: digitalIdsPage >= Math.ceil(digitalIds.length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setDigitalIdsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {!loading && digitalIds.length === 0 && <div style={{ padding: '48px', textAlign: 'center', color: '#8e8e95', fontSize: 14 }}>No digital ID pages yet. Create accounts to generate pages.</div>}
+                </>
+              )}
             </div>
           </div>
         )}
@@ -638,14 +776,43 @@ export default function SiteAdminPage() {
             </div>
             <div style={{ background: 'white', padding: 32, border: '1px solid rgba(0,13,16,0.1)' }}>
               {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))', gap: '0 40px' }}>
-                  {Object.entries(siteSettings).map(([key, val]) => (
-                    <div key={key} style={{ marginBottom: 24 }}>
-                      <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: '#8e8e95', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>{key.replace(/_/g, ' ')}</label>
-                      <input type="text" value={val} onChange={e => setSiteSettings(prev => ({ ...prev, [key]: e.target.value }))} style={{ width: '100%', padding: '8px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.12)', background: 'transparent', fontSize: 13, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                <>
+                {(() => {
+                  const entries = Object.entries(siteSettings);
+                  const st = Math.max(1, Math.ceil(entries.length / adminPageSize));
+                  const ss = Math.min(siteSettingsPage, st - 1);
+                  const paginatedEntries = entries.slice(ss * adminPageSize, (ss + 1) * adminPageSize);
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 380px), 1fr))', gap: '0 40px' }}>
+                      {paginatedEntries.map(([key, val]) => (
+                        <div key={key} style={{ marginBottom: 24 }}>
+                          <label style={{ display: 'block', fontSize: 10, letterSpacing: '0.2em', color: '#8e8e95', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>{key.replace(/_/g, ' ')}</label>
+                          <input type="text" value={val} onChange={e => setSiteSettings(prev => ({ ...prev, [key]: e.target.value }))} style={{ width: '100%', padding: '8px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.12)', background: 'transparent', fontSize: 13, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
+                {Object.entries(siteSettings).length > adminPageSize && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 0 0' }}>
+                    <button onClick={() => setSiteSettingsPage(p => Math.max(0, p - 1))} disabled={siteSettingsPage === 0}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: siteSettingsPage === 0 ? '#d5d3d4' : '#000d10', cursor: siteSettingsPage === 0 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: siteSettingsPage === 0 ? 0.5 : 1 }}>← Prev</button>
+                    {Array.from({ length: Math.ceil(Object.entries(siteSettings).length / adminPageSize) }, (_, i) => (
+                      <button key={i} onClick={() => setSiteSettingsPage(i)}
+                        style={{ padding: '6px 12px', border: `1px solid ${i === siteSettingsPage ? '#000d10' : 'rgba(0,13,16,0.15)'}`, borderRadius: 9999, background: i === siteSettingsPage ? '#000d10' : 'transparent', color: i === siteSettingsPage ? 'white' : '#8e8e95', cursor: 'pointer', fontSize: 11, fontWeight: 700, minWidth: 32, textAlign: 'center' }}>{i + 1}</button>
+                    ))}
+                    <button onClick={() => setSiteSettingsPage(p => Math.min(Math.ceil(Object.entries(siteSettings).length / adminPageSize) - 1, p + 1))} disabled={siteSettingsPage >= Math.ceil(Object.entries(siteSettings).length / adminPageSize) - 1}
+                      style={{ padding: '6px 14px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: siteSettingsPage >= Math.ceil(Object.entries(siteSettings).length / adminPageSize) - 1 ? '#d5d3d4' : '#000d10', cursor: siteSettingsPage >= Math.ceil(Object.entries(siteSettings).length / adminPageSize) - 1 ? 'default' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', opacity: siteSettingsPage >= Math.ceil(Object.entries(siteSettings).length / adminPageSize) - 1 ? 0.5 : 1 }}>Next →</button>
+                    <span style={{ fontSize: 11, color: '#8e8e95', fontWeight: 500, marginLeft: 8 }}>{Object.entries(siteSettings).length} total</span>
+                    <select value={adminPageSize} onChange={e => { setAdminPageSize(Number(e.target.value)); setSiteSettingsPage(0); }}
+                      style={{ padding: '4px 10px', border: '1px solid rgba(0,13,16,0.15)', borderRadius: 9999, background: 'transparent', color: '#000d10', cursor: 'pointer', fontSize: 10, fontWeight: 700, outline: 'none', marginLeft: 8, appearance: 'none', paddingRight: 22, backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%238e8e95'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                </>
               )}
             </div>
           </div>
