@@ -133,7 +133,8 @@ export async function loadProfileMetadata(userId: string) {
   try {
     // Load ALL settings keys for this user at once
     const prefix = `digital_profile:${userId}:`;
-    const { data } = await c.from('settings').select('key,value').like('key', `${prefix}%`);
+    const { data, error } = await c.from('settings').select('key,value').like('key', `${prefix}%`);
+    if (error) return out;
     if (!data) return out;
     
     // Group rows by field name
@@ -177,11 +178,13 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
       const prefix = `digital_profile:${userId}:${f}`;
       
       // Delete old rows for this field (both old chunked format and single-row format)
-      await c.from('settings').delete().like('key', `${prefix}%`);
+      const { error: delErr } = await c.from('settings').delete().like('key', `${prefix}%`);
+      if (delErr) return false;
       
       if (value.length <= CHUNK_SIZE) {
         // Small value — store as a single row
-        await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
+        const { error: upsErr } = await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
+        if (upsErr) return false;
       } else {
         // Large value — split into chunks to avoid column size limits
         const rows: { key: string; value: string }[] = [];
@@ -189,7 +192,8 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
           rows.push({ key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
         }
         rows.push({ key: `${prefix}:count`, value: String(rows.length) });
-        await c.from('settings').insert(rows);
+        const { error: insErr } = await c.from('settings').insert(rows);
+        if (insErr) return false;
       }
     }
     return true;
