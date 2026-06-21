@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 import { fetchUserById } from '@/lib/auth';
 
+async function cleanupStaleResetRequests(client: ReturnType<typeof getSupabaseClient>) {
+  if (!client) return;
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await client
+    .from('settings')
+    .select('key,value')
+    .like('key', 'password_reset_request:%');
+  for (const row of data || []) {
+    try {
+      const parsed = JSON.parse(row.value);
+      if (parsed.created_at && parsed.created_at < cutoff) {
+        await client.from('settings').delete().eq('key', row.key);
+      }
+    } catch { /* skip malformed */ }
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Verify admin
@@ -16,6 +33,9 @@ export async function GET(request: NextRequest) {
 
     const client = getSupabaseClient();
     if (!client) return NextResponse.json([]);
+
+    // Clean up stale requests older than 24 hours
+    await cleanupStaleResetRequests(client);
 
     const { data } = await client
       .from('settings')

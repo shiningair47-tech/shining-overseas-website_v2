@@ -9,6 +9,23 @@ function getIp(req: Request): string {
     || 'unknown';
 }
 
+async function cleanupStaleResetRequests(client: ReturnType<typeof getSupabaseClient>) {
+  if (!client) return;
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await client
+    .from('settings')
+    .select('key,value')
+    .like('key', 'password_reset_request:%');
+  for (const row of data || []) {
+    try {
+      const parsed = JSON.parse(row.value);
+      if (parsed.created_at && parsed.created_at < cutoff) {
+        await client.from('settings').delete().eq('key', row.key);
+      }
+    } catch { /* skip malformed */ }
+  }
+}
+
 export async function POST(req: Request) {
   try {
     // Rate limit: max 3 requests per IP every 15 minutes
@@ -29,9 +46,12 @@ export async function POST(req: Request) {
     const user = await fetchUserByEmail(email.trim().toLowerCase());
 
     if (user) {
-      // Store a pending reset request in the settings table
       const client = getSupabaseClient();
       if (client) {
+        // Clean up any stale requests older than 24 hours
+        await cleanupStaleResetRequests(client);
+
+        // Store a pending reset request
         const requestKey = `password_reset_request:${email.trim().toLowerCase()}`;
         const requestValue = JSON.stringify({
           email: email.trim().toLowerCase(),
@@ -39,7 +59,6 @@ export async function POST(req: Request) {
           status: 'pending',
         });
 
-        // Upsert — if a request already exists, update its timestamp
         await client.from('settings').upsert(
           { key: requestKey, value: requestValue },
           { onConflict: 'key' }
