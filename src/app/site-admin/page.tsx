@@ -148,6 +148,9 @@ export default function SiteAdminPage() {
       url = '/api/awards'; body = { id, title: form.title, issuer: form.issuer, year: form.year, description: form.description, image_url: form.image_url || '', sort_order: form.sort_order || '0' };
     } else if (type === 'testimonial') {
       url = '/api/testimonials'; body = { id, quote: form.quote, name: form.name, role: form.role, country: form.country, image_url: form.image_url || '', is_featured: form.is_featured === 'true' };
+    } else if (type === 'add_admin') {
+      if (!form.temp_password || form.temp_password.length < 8) { setFormMsg('Temporary password is required (min 8 characters).'); return; }
+      url = '/api/accounts'; body = { email: form.email, full_name: form.full_name, role: 'ADMIN', temp_password: form.temp_password };
     } else if (type === 'account') {
       if (!form.temp_password || form.temp_password.length < 8) { setFormMsg('Temporary password is required (min 8 characters).'); return; }
       url = '/api/accounts'; body = { email: form.email, full_name: form.full_name, role: form.role || 'TEAM_MEMBER', temp_password: form.temp_password, assigned_to: form.assigned_to || '' };
@@ -263,6 +266,10 @@ export default function SiteAdminPage() {
     const diff = Date.now() - new Date(created).getTime();
     return diff < days * 24 * 60 * 60 * 1000;
   };
+
+  const adminCount = useMemo(() => {
+    return accounts.filter(a => (a.role as string) === 'ADMIN').length;
+  }, [accounts]);
 
   const leadUniqueStatuses = useMemo(() => {
     const set = new Set(leads.map(l => (l.status as string)).filter(Boolean));
@@ -386,6 +393,11 @@ export default function SiteAdminPage() {
               {key === 'accounts' && pendingResetReqs.length > 0 && (
                 <span style={{ position: 'absolute', top: 10, right: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9999, background: '#dc2626', color: 'white', fontSize: 10, fontWeight: 800, lineHeight: 1, boxSizing: 'border-box' }}>
                   {pendingResetReqs.length}
+                </span>
+              )}
+              {key === 'accounts' && adminCount > 0 && (
+                <span style={{ marginLeft: 4, padding: '2px 6px', borderRadius: 9999, background: '#1e293b', color: 'white', fontSize: 9, fontWeight: 800, lineHeight: 1.4 }}>
+                  {adminCount}
                 </span>
               )}
             </button>
@@ -614,7 +626,10 @@ export default function SiteAdminPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
               <div style={{ fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase' }}>Accounts ({accounts.length})</div>
-              <button onClick={() => openModal('account')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Create Account</button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => openModal('add_admin')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#1e293b', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Add Admin</button>
+                <button onClick={() => openModal('account')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}><Plus size={14} /> Create Account</button>
+              </div>
             </div>
             <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)', marginBottom: 40 }}>
               {loading ? <div style={{ padding: 40, textAlign: 'center' }}><LoaderCircle size={24} color="#bc7155" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} /></div> : (
@@ -623,10 +638,15 @@ export default function SiteAdminPage() {
                   const accTotal = Math.max(1, Math.ceil(accounts.length / adminPageSize));
                   const accSafe = Math.min(accountPage, accTotal - 1);
                   return accounts.slice(accSafe * adminPageSize, (accSafe + 1) * adminPageSize).map((a, i) => (
-                  <div key={a.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
+                  <div key={a.id as string} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '20px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none', background: (a.role as string) === 'ADMIN' ? '#f8fafc' : 'transparent' }}>
                     <div style={{ flex: 1, minWidth: 200 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{a.full_name as string}</div>
-                      <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>{a.email as string} · <span style={{ fontWeight: 700, color: a.role === 'TEAM_MEMBER' ? '#1d4ed8' : '#7c3aed' }}>{a.role as string}</span></div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {a.full_name as string}
+                        {(a.role as string) === 'ADMIN' && (
+                          <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 9999, background: '#1e293b', color: 'white', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', lineHeight: 1.4 }}>Admin</span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>{a.email as string} · <span style={{ fontWeight: 700, color: a.role === 'TEAM_MEMBER' ? '#1d4ed8' : a.role === 'ADMIN' ? '#0f172a' : '#7c3aed' }}>{a.role as string}</span></div>
                       {Boolean(a.referral_code) && <div style={{ fontSize: 11, color: '#bc7155', marginTop: 4, fontWeight: 600 }}>Code: {String(a.referral_code)}</div>}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
@@ -1003,6 +1023,15 @@ export default function SiteAdminPage() {
           </div>
           {formMsg && <div style={{ padding: '10px 16px', background: formMsg.includes('Error') ? '#fef2f2' : '#f0fdf4', border: '1px solid', borderColor: formMsg.includes('Error') ? '#fecaca' : '#bbf7d0', marginBottom: 20, fontSize: 13, color: formMsg.includes('Error') ? '#dc2626' : '#15803d', fontWeight: 500 }}>{formMsg}</div>}
           <button onClick={handleFormSubmit} style={{ width: '100%', padding: '14px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Save Testimonial</button>
+        </Modal>
+      )}
+      {modal?.type === 'add_admin' && (
+        <Modal title="Add Admin Account" onClose={closeModal}>
+          <Field label="Full Name" name="full_name" value={form.full_name || ''} onChange={v => setForm(p => ({ ...p, full_name: v }))} placeholder="Full name" />
+          <Field label="Email Address" name="email" value={form.email || ''} onChange={v => setForm(p => ({ ...p, email: v }))} type="email" placeholder="email@example.com" />
+          <Field label="Temporary Password *" name="temp_password" value={form.temp_password || ''} onChange={v => setForm(p => ({ ...p, temp_password: v }))} placeholder="Min 8 characters" />
+          {formMsg && <div style={{ padding: '10px 16px', background: formMsg.includes('Error') || formMsg.includes('error') ? '#fef2f2' : '#f0fdf4', border: '1px solid', borderColor: formMsg.includes('Error') || formMsg.includes('error') ? '#fecaca' : '#bbf7d0', marginBottom: 20, fontSize: 13, color: formMsg.includes('Error') || formMsg.includes('error') ? '#dc2626' : '#15803d', fontWeight: 500, wordBreak: 'break-all' }}>{formMsg}</div>}
+          <button onClick={handleFormSubmit} style={{ width: '100%', padding: '14px', background: '#1e293b', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Create Admin Account</button>
         </Modal>
       )}
       {modal?.type === 'account' && (
