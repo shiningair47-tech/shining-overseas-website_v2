@@ -83,6 +83,9 @@ export default function SiteAdminPage() {
   const [siteSettingsPage, setSiteSettingsPage] = useState(0);
   const [accountPage, setAccountPage] = useState(0);
   const [adminPageSize, setAdminPageSize] = useState(20);
+  const [pendingResetReqs, setPendingResetReqs] = useState<{ email: string; created_at: string }[]>([]);
+  const [resetReqMsg, setResetReqMsg] = useState('');
+  const [resetReqLoading, setResetReqLoading] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('so_user');
@@ -100,16 +103,17 @@ export default function SiteAdminPage() {
       if (tab === 'circulars') { const d = await fetch('/api/circulars').then(r => r.json()); setCirculars(Array.isArray(d) ? d : []); }
       if (tab === 'flights') { const d = await fetch('/api/flights').then(r => r.json()); setFlights(Array.isArray(d) ? d : []); }
       if (tab === 'awards') { const d = await fetch('/api/awards').then(r => r.json()); setAwards(Array.isArray(d) ? d : []); }
-      if (tab === 'testimonials') { const d = await fetch('/api/testimonials').then(r => r.json()); setTestimonials(Array.isArray(d) ? d : []); }
-      if (tab === 'accounts') {
-        const [accs, teams, leds] = await Promise.all([
+      if (tab === 'testimonials') { const d = await fetch('/api/testimonials').then(r => r.json()); setTestimonials(Array.isArray(d) ? d : []); }        if (tab === 'accounts') {
+        const [accs, teams, leds, resetReqs] = await Promise.all([
           fetch('/api/accounts').then(r => r.json()),
           fetch('/api/accounts?teamOptions=true').then(r => r.json()),
           fetch('/api/leads').then(r => r.json()),
+          fetch('/api/auth/pending-reset-requests', { headers: user ? { 'x-user-id': user.id } : {} }).then(r => r.json()),
         ]);
         setAccounts(Array.isArray(accs) ? accs : []);
         setTeamOptions(Array.isArray(teams) ? teams : []);
         setLeads(Array.isArray(leds) ? leds : []);
+        setPendingResetReqs(Array.isArray(resetReqs) ? resetReqs : []);
       }
       if (tab === 'digital_id') { const d = await fetch('/api/digital-id').then(r => r.json()); setDigitalIds(Array.isArray(d) ? d : []); }
       if (tab === 'site_settings') { const d = await fetch('/api/site-settings').then(r => r.json()); setSiteSettings(d || {}); }
@@ -205,6 +209,30 @@ export default function SiteAdminPage() {
       const data = await res.json();
       setSettingsSaveMsg(data.ok ? 'Saved!' : 'Error saving.'); setTimeout(() => setSettingsSaveMsg(''), 2000);
     } catch { setSettingsSaveMsg('Error.'); }
+  };
+
+  const handleApproveResetRequest = async (email: string) => {
+    if (!user) return;
+    setResetReqLoading(email);
+    setResetReqMsg('');
+    try {
+      const res = await fetch('/api/auth/approve-reset-request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-user-id': user.id },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setResetReqMsg(`✓ Password reset for ${email}. Temp password: ${data.temp_password}`);
+        // Remove from pending list
+        setPendingResetReqs(prev => prev.filter(r => r.email !== email));
+        setTimeout(() => setResetReqMsg(''), 8000);
+      } else {
+        setResetReqMsg(`Error: ${data.msg || 'Failed to reset.'}`);
+      }
+    } catch {
+      setResetReqMsg('Network error.');
+    }
+    setResetReqLoading(null);
   };
 
   const handleChangePassword = async () => {
@@ -353,7 +381,14 @@ export default function SiteAdminPage() {
       <div style={{ background: 'white', borderBottom: '1px solid rgba(0,13,16,0.1)' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px', display: 'flex', overflowX: 'auto' }}>
           {TABS.map(([key, label]) => (
-            <button key={key} onClick={() => setActiveTab(key)} style={{ padding: '20px 20px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === key ? '#000d10' : 'transparent'}`, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: activeTab === key ? '#000d10' : '#8e8e95', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>{label}</button>
+            <button key={key} onClick={() => setActiveTab(key)} style={{ position: 'relative', padding: '20px 20px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === key ? '#000d10' : 'transparent'}`, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: activeTab === key ? '#000d10' : '#8e8e95', letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
+              {label}
+              {key === 'accounts' && pendingResetReqs.length > 0 && (
+                <span style={{ position: 'absolute', top: 10, right: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, padding: '0 5px', borderRadius: 9999, background: '#dc2626', color: 'white', fontSize: 10, fontWeight: 800, lineHeight: 1, boxSizing: 'border-box' }}>
+                  {pendingResetReqs.length}
+                </span>
+              )}
+            </button>
           ))}
         </div>
       </div>
@@ -627,6 +662,35 @@ export default function SiteAdminPage() {
                 </>
               )}
             </div>
+
+            {/* Password Reset Requests */}
+            {pendingResetReqs.length > 0 && (
+              <div style={{ marginBottom: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                  <div style={{ fontSize: 11, letterSpacing: '0.2em', color: '#bc7155', fontWeight: 700, textTransform: 'uppercase' }}>Password Reset Requests ({pendingResetReqs.length})</div>
+                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#dc2626', animation: 'pulse 2s infinite' }} />
+                </div>
+                {resetReqMsg && (
+                  <div style={{ padding: '12px 16px', background: resetReqMsg.startsWith('✓') ? '#f0fdf4' : '#fef2f2', border: '1px solid', borderColor: resetReqMsg.startsWith('✓') ? '#bbf7d0' : '#fecaca', marginBottom: 16, fontSize: 13, color: resetReqMsg.startsWith('✓') ? '#15803d' : '#dc2626', fontWeight: 500, wordBreak: 'break-all' }}>{resetReqMsg}</div>
+                )}
+                <div style={{ background: 'white', border: '1px solid rgba(0,13,16,0.1)' }}>
+                  {pendingResetReqs.map((req, i) => (
+                    <div key={req.email} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '16px 24px', borderTop: i > 0 ? '1px solid rgba(0,13,16,0.07)' : 'none' }}>
+                      <div style={{ flex: 1, minWidth: 200 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#000d10' }}>{req.email}</div>
+                        <div style={{ fontSize: 11, color: '#8e8e95', marginTop: 2, fontWeight: 500 }}>Requested {new Date(req.created_at).toLocaleString()}</div>
+                      </div>
+                      <button
+                        onClick={() => handleApproveResetRequest(req.email)}
+                        disabled={resetReqLoading === req.email}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: resetReqLoading === req.email ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: resetReqLoading === req.email ? 0.6 : 1 }}>
+                        {resetReqLoading === req.email ? <><LoaderCircle size={14} style={{ animation: 'spin 1s linear infinite' }} /> Resetting...</> : 'Approve & Reset'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Leads Section */}
             <div>
@@ -981,7 +1045,7 @@ export default function SiteAdminPage() {
           <button onClick={handleFormSubmit} style={{ width: '100%', padding: '14px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Transfer Lead</button>
         </Modal>
       )}
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </main>
   );
 }

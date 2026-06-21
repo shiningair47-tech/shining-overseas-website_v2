@@ -140,7 +140,7 @@ function LoginForm() {
                   <KeyRound size={14} color="#000d10" />
                   <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase' }}>Reset Password</span>
                 </div>
-                <p style={{ fontSize: 13, color: '#8e8e95', fontWeight: 500, marginBottom: 20, lineHeight: 1.5 }}>Enter your email address and we will generate a temporary password for you.</p>
+                <p style={{ fontSize: 13, color: '#8e8e95', fontWeight: 500, marginBottom: 20, lineHeight: 1.5 }}>Enter your email and we'll notify the admin team to set a new password for you.</p>
                 <div style={{ marginBottom: 20 }}>
                   <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Email Address</label>
                   <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="you@example.com"
@@ -153,11 +153,11 @@ function LoginForm() {
                   </div>
                 )}
                 {forgotMsg && (
-                  <div style={{ padding: '16px', background: '#f0fdf4', border: '1px solid #bbf7d0', marginBottom: 20, fontSize: 13, color: '#15803d', fontWeight: 500, lineHeight: 1.6, wordBreak: 'break-all' }}>{forgotMsg}</div>
+                  <div style={{ padding: '16px', background: '#f0fdf4', border: '1px solid #bbf7d0', marginBottom: 20, fontSize: 13, color: '#15803d', fontWeight: 500, lineHeight: 1.6 }}>{forgotMsg}</div>
                 )}
                 <button type="button" onClick={handleForgotPassword} disabled={forgotLoading}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 28px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: forgotLoading ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', opacity: forgotLoading ? 0.6 : 1 }}>
-                  {forgotLoading ? <><LoaderCircle size={16} style={{ animation: 'spin 1s linear infinite' }} /><span>Processing...</span></> : 'Reset Password'}
+                  {forgotLoading ? <><LoaderCircle size={16} style={{ animation: 'spin 1s linear infinite' }} /><span>Submitting...</span></> : 'Submit Request'}
                 </button>
               </div>
             )}
