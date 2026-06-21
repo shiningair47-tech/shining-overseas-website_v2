@@ -42,7 +42,7 @@ export async function listAccounts() {
   try {
     const { data } = await c.from('users')
       .select('id,email,role,full_name,phone_number,referral_code,status,tier,assigned_to,facebook_page,created_at,join_date')
-      .in('role', ['TEAM_MEMBER', 'INFLUENCER'])
+      .in('role', ['TEAM_MEMBER', 'INFLUENCER', 'ADMIN'])
       .order('created_at', { ascending: false });
     return (data || []).map((r: Record<string, unknown>) => ({
       ...r,
@@ -69,7 +69,7 @@ export async function createAccount(email: string, fullName: string, role: strin
   : Promise<[boolean, string, string]> {
   const c = getSupabaseClient(); if (!c) return [false, 'Database not configured.', ''];
   const roleUp = role.toUpperCase();
-  if (!['TEAM_MEMBER', 'INFLUENCER'].includes(roleUp)) return [false, 'Invalid role.', ''];
+  if (!['TEAM_MEMBER', 'INFLUENCER', 'ADMIN'].includes(roleUp)) return [false, 'Invalid role.', ''];
   const emailClean = email.trim().toLowerCase();
   const nameClean = fullName.trim();
   if (!emailClean || !emailClean.includes('@')) return [false, 'Invalid email.', ''];

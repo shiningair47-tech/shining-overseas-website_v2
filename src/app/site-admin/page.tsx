@@ -63,6 +63,12 @@ export default function SiteAdminPage() {
   const [formMsg, setFormMsg] = useState('');
   const [copied, setCopied] = useState('');
   const [settingsSaveMsg, setSettingsSaveMsg] = useState('');
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNew, setPwNew] = useState('');
+  const [pwConfirm, setPwConfirm] = useState('');
+  const [pwMsg, setPwMsg] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
   const [leadDateFilter, setLeadDateFilter] = useState('all');
   const [leadStatusFilter, setLeadStatusFilter] = useState('all');
   const [leadSearchQuery, setLeadSearchQuery] = useState('');
@@ -199,6 +205,29 @@ export default function SiteAdminPage() {
       const data = await res.json();
       setSettingsSaveMsg(data.ok ? 'Saved!' : 'Error saving.'); setTimeout(() => setSettingsSaveMsg(''), 2000);
     } catch { setSettingsSaveMsg('Error.'); }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user) return;
+    if (!pwCurrent || !pwNew || !pwConfirm) { setPwMsg('All fields are required.'); return; }
+    if (pwNew.length < 8) { setPwMsg('New password must be at least 8 characters.'); return; }
+    if (pwNew !== pwConfirm) { setPwMsg('New passwords do not match.'); return; }
+    setPwLoading(true); setPwMsg('');
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, currentPassword: pwCurrent, newPassword: pwNew }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setPwMsg('✓ Password changed successfully!');
+        setPwCurrent(''); setPwNew(''); setPwConfirm('');
+        setTimeout(() => { setPwMsg(''); setShowChangePw(false); }, 3000);
+      } else {
+        setPwMsg(data.error || 'Failed to change password.');
+      }
+    } catch { setPwMsg('Network error. Please try again.'); }
+    setPwLoading(false);
   };
 
   const isWithinDays = (created: string, days: number) => {
@@ -817,6 +846,44 @@ export default function SiteAdminPage() {
             </div>
           </div>
         )}
+        {/* ── CHANGE PASSWORD ── */}
+        <div style={{ maxWidth: 560, marginTop: 40 }}>
+          <div style={{ background: 'white', padding: 32, border: '1px solid rgba(0,13,16,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase' }}>Change Password</div>
+              <button onClick={() => { setShowChangePw(!showChangePw); setPwMsg(''); setPwCurrent(''); setPwNew(''); setPwConfirm(''); }}
+                style={{ padding: '8px 16px', background: showChangePw ? 'transparent' : '#000d10', color: showChangePw ? '#000d10' : 'white', border: `1px solid ${showChangePw ? 'rgba(0,13,16,0.15)' : '#000d10'}`, borderRadius: 9999, cursor: 'pointer', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {showChangePw ? 'Cancel' : 'Change Password'}
+              </button>
+            </div>
+            {showChangePw && (
+              <div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Current Password</label>
+                  <input type="password" value={pwCurrent} onChange={e => setPwCurrent(e.target.value)} placeholder="Enter current password"
+                    style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>New Password</label>
+                  <input type="password" value={pwNew} onChange={e => setPwNew(e.target.value)} placeholder="Min 8 characters"
+                    style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Confirm New Password</label>
+                  <input type="password" value={pwConfirm} onChange={e => setPwConfirm(e.target.value)} placeholder="Re-enter new password"
+                    style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                </div>
+                {pwMsg && (
+                  <div style={{ padding: '10px 16px', background: pwMsg.startsWith('✓') || pwMsg.includes('successfully') ? '#f0fdf4' : '#fef2f2', border: '1px solid', borderColor: pwMsg.startsWith('✓') || pwMsg.includes('successfully') ? '#bbf7d0' : '#fecaca', marginBottom: 20, fontSize: 13, color: pwMsg.startsWith('✓') || pwMsg.includes('successfully') ? '#15803d' : '#dc2626', fontWeight: 500 }}>{pwMsg}</div>
+                )}
+                <button onClick={handleChangePassword} disabled={pwLoading}
+                  style={{ padding: '12px 24px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: pwLoading ? 'not-allowed' : 'pointer', fontSize: 11, fontWeight: 700, opacity: pwLoading ? 0.6 : 1, letterSpacing: '0.1em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {pwLoading ? <><LoaderCircle size={14} style={{ animation: 'spin 1s linear infinite' }} /> Updating...</> : 'Update Password'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── MODALS ── */}
@@ -881,6 +948,7 @@ export default function SiteAdminPage() {
           <div style={{ marginBottom: 24 }}>
             <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 10 }}>Role</label>
             <select value={form.role || 'TEAM_MEMBER'} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} style={{ width: '100%', padding: '10px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 14, color: '#000d10', fontWeight: 500, appearance: 'none' }}>
+              <option value="ADMIN">Admin</option>
               <option value="TEAM_MEMBER">Team Member (Staff)</option>
               <option value="INFLUENCER">Influencer (Ambassador)</option>
             </select>

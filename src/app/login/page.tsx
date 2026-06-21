@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plane, ArrowRight, CircleAlert, LoaderCircle } from 'lucide-react';
+import { Plane, ArrowRight, CircleAlert, LoaderCircle, KeyRound } from 'lucide-react';
 import { Suspense } from 'react';
 
 function LoginForm() {
@@ -10,6 +10,11 @@ function LoginForm() {
   const [selectedRole, setSelectedRole] = useState('team');
   const [loginError, setLoginError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPw, setShowForgotPw] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState('');
+  const [forgotError, setForgotError] = useState('');
 
   useEffect(() => {
     const role = searchParams.get('role');
@@ -42,6 +47,24 @@ function LoginForm() {
       if (data.user.role === 'ADMIN') router.replace('/site-admin');
       else router.replace('/portal');
     } catch { setLoginError('Network error. Please try again.'); setLoading(false); }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail || !forgotEmail.includes('@')) { setForgotError('Please enter a valid email address.'); return; }
+    setForgotLoading(true); setForgotError(''); setForgotMsg('');
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setForgotMsg(data.msg || 'If an account exists, a temporary password has been generated.');
+      } else {
+        setForgotError(data.error || 'Failed to reset password. Please try again.');
+      }
+    } catch { setForgotError('Network error. Please try again.'); }
+    setForgotLoading(false);
   };
 
   const header = (
@@ -92,9 +115,14 @@ function LoginForm() {
                 <input name="email" type="email" placeholder="you@example.com"
                   required style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
               </div>
-              <div style={{ marginBottom: 32 }}>
+              <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Password</label>
                 <input name="password" type="password" placeholder="••••••••" required style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ textAlign: 'right', marginBottom: 32 }}>
+                <button type="button" onClick={() => { setShowForgotPw(!showForgotPw); setForgotError(''); setForgotMsg(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: '#bc7155', fontWeight: 700, textDecoration: 'none', padding: 0 }}>
+                  Forgot Password?
+                </button>
               </div>
               {loginError && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', marginBottom: 20 }}>
@@ -106,6 +134,33 @@ function LoginForm() {
                 {loading ? <><LoaderCircle size={16} style={{ animation: 'spin 1s linear infinite' }} /><span>Signing in...</span></> : <><span>Sign In</span><ArrowRight size={16} /></>}
               </button>
             </form>
+            {showForgotPw && (
+              <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid rgba(0,13,16,0.1)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                  <KeyRound size={14} color="#000d10" />
+                  <span style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase' }}>Reset Password</span>
+                </div>
+                <p style={{ fontSize: 13, color: '#8e8e95', fontWeight: 500, marginBottom: 20, lineHeight: 1.5 }}>Enter your email address and we will generate a temporary password for you.</p>
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.2em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 12 }}>Email Address</label>
+                  <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="you@example.com"
+                    style={{ width: '100%', padding: '12px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid rgba(0,13,16,0.15)', background: 'transparent', fontSize: 15, color: '#000d10', fontWeight: 500, boxSizing: 'border-box' }} />
+                </div>
+                {forgotError && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca', marginBottom: 20 }}>
+                    <CircleAlert size={16} color="#dc2626" />
+                    <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 500 }}>{forgotError}</span>
+                  </div>
+                )}
+                {forgotMsg && (
+                  <div style={{ padding: '16px', background: '#f0fdf4', border: '1px solid #bbf7d0', marginBottom: 20, fontSize: 13, color: '#15803d', fontWeight: 500, lineHeight: 1.6, wordBreak: 'break-all' }}>{forgotMsg}</div>
+                )}
+                <button type="button" onClick={handleForgotPassword} disabled={forgotLoading}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px 28px', background: '#000d10', color: 'white', border: 'none', borderRadius: 9999, cursor: forgotLoading ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', opacity: forgotLoading ? 0.6 : 1 }}>
+                  {forgotLoading ? <><LoaderCircle size={16} style={{ animation: 'spin 1s linear infinite' }} /><span>Processing...</span></> : 'Reset Password'}
+                </button>
+              </div>
+            )}
             <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid rgba(0,13,16,0.1)', textAlign: 'center' }}>
               <span style={{ fontSize: 13, color: '#8e8e95', fontWeight: 500 }}>Need help? </span>
               <a href="/#contact" style={{ fontSize: 13, color: '#000d10', fontWeight: 700, textDecoration: 'none' }}>Contact our team</a>

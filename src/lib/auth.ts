@@ -37,6 +37,17 @@ export async function fetchUserById(id: string): Promise<UserRecord | null> {
   } catch { return null; }
 }
 
+export async function fetchUserByIdWithPassword(id: string): Promise<UserRecord | null> {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  try {
+    const { data } = await client.from('users')
+      .select('id,email,password_hash,role,full_name,phone_number,referral_code,status,tier,assigned_to,facebook_page')
+      .eq('id', id).limit(1);
+    return data?.[0] || null;
+  } catch { return null; }
+}
+
 export async function fetchUserByReferralCode(code: string): Promise<UserRecord | null> {
   const client = getSupabaseClient();
   if (!client) return null;
@@ -105,6 +116,16 @@ export async function updateUserProfile(userId: string, fullName: string, phone:
   if (!client) return false;
   try {
     await client.from('users').update({ full_name: fullName, phone_number: phone, facebook_page: facebook }).eq('id', userId);
+    return true;
+  } catch { return false; }
+}
+
+export async function changeUserPassword(userId: string, newPassword: string): Promise<boolean> {
+  const client = getSupabaseClient();
+  if (!client) return false;
+  try {
+    const hash = bcrypt.hashSync(newPassword, 12);
+    await client.from('users').update({ password_hash: hash }).eq('id', userId);
     return true;
   } catch { return false; }
 }
