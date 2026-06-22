@@ -16,8 +16,13 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { action } = body;
   if (action === 'save_profile') {
-    const ok = await saveProfileMetadata(body.user_id, body.data);
-    return NextResponse.json({ ok });
+    try {
+      const ok = await saveProfileMetadata(body.user_id, body.data);
+      return NextResponse.json({ ok });
+    } catch (e: unknown) {
+      console.error('[digital-id POST] exception:', e);
+      return NextResponse.json({ ok: false, error: String(e) });
+    }
   }
   if (action === 'update_user') {
     const c = getSupabaseClient();
