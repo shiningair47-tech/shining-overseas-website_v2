@@ -210,7 +210,17 @@ export default function SiteAdminPage() {
     try {
       const res = await fetch('/api/site-settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(siteSettings) });
       const data = await res.json();
-      setSettingsSaveMsg(data.ok ? 'Saved!' : 'Error saving.'); setTimeout(() => setSettingsSaveMsg(''), 2000);
+      if (data.ok) {
+        // Re-fetch persisted settings so the form shows what was actually saved
+        fetch('/api/site-settings').then(r => r.json()).then(refreshed => {
+          setSiteSettings(refreshed || {});
+        }).catch(() => {});
+        setSettingsSaveMsg('Saved!');
+        setTimeout(() => setSettingsSaveMsg(''), 2000);
+      } else {
+        setSettingsSaveMsg('Error saving.');
+        setTimeout(() => setSettingsSaveMsg(''), 2000);
+      }
     } catch { setSettingsSaveMsg('Error.'); }
   };
 

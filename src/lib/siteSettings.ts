@@ -68,10 +68,6 @@ export  async function loadSiteSettings(): Promise<Record<string, string>> {
         }
       }
     }
-    // Force correct hero heading text — DB has stale misspelled values
-    // ("YOUR TRUSTED WAY TO" without trailing space and "GLOBAL OPPOURTUNITY" misspelled)
-    out['hero_heading'] = DEFAULT_SETTINGS['hero_heading'];
-    out['hero_heading_accent'] = DEFAULT_SETTINGS['hero_heading_accent'];
   } catch {}
   return out;
 }
