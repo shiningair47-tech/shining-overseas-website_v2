@@ -52,7 +52,8 @@ export  async function loadSiteSettings(): Promise<Record<string, string>> {
   if (!client) return out;
   try {
     const keys = SETTING_KEYS.map(k => `site_settings:${k}`);
-    const { data } = await client.from('settings').select('key,value').in('key', keys);
+    const { data, error } = await client.from('settings').select('key,value').in('key', keys);
+    if (error) return out;
     for (const row of data || []) {
       const short = row.key.replace('site_settings:', '');
       if (short in DEFAULT_SETTINGS && row.value) {
@@ -84,7 +85,8 @@ export async function saveSiteSettings(data: Record<string, string>): Promise<bo
       key: `site_settings:${key}`,
       value: cleanValue(data[key] || DEFAULT_SETTINGS[key] || '').slice(0, 255),
     }));
-    await client.from('settings').upsert(rows, { onConflict: 'key' });
+    const { error } = await client.from('settings').upsert(rows, { onConflict: 'key' });
+    if (error) return false;
     return true;
   } catch { return false; }
 }
