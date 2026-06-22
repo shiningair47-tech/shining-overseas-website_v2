@@ -1,4 +1,4 @@
-import { getSupabaseClient } from './supabase';
+import { getSupabaseClient, getSupabaseAdminClient } from './supabase';
 import { v4 as uuid } from 'uuid';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -171,7 +171,7 @@ const CHUNK_SIZE = 8000;
 
 export async function saveProfileMetadata(userId: string, data: Record<string, string>): Promise<boolean> {
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
-  const c = getSupabaseClient(); if (!c) return false;
+  const c = getSupabaseAdminClient(); if (!c) return false;
   try {
     for (const f of fields) {
       const value = data[f] || '';
