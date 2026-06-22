@@ -1,4 +1,4 @@
-import { getSupabaseClient } from './supabase';
+import { getSupabaseClient, getSupabaseAdminClient } from './supabase';
 
 export const DEFAULT_SETTINGS: Record<string, string> = {
   hero_badge: 'BAIRA LICENSED · REG. NO. RL-2716',
@@ -78,7 +78,9 @@ function cleanValue(v: string): string {
 }
 
 export async function saveSiteSettings(data: Record<string, string>): Promise<boolean> {
-  const client = getSupabaseClient();
+  // Use the admin (service_role) client that bypasses RLS — the settings
+  // table has RLS enabled and the anon key has no write permission.
+  const client = getSupabaseAdminClient();
   if (!client) return false;
   try {
     const rows = SETTING_KEYS.map(key => ({
