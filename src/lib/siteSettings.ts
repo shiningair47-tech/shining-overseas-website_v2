@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { getSupabaseClient, getSupabaseAdminClient } from './supabase';
 
 export const DEFAULT_SETTINGS: Record<string, string> = {
@@ -83,10 +84,16 @@ export async function saveSiteSettings(data: Record<string, string>): Promise<bo
   const client = getSupabaseAdminClient();
   if (!client) return false;
   try {
+    const now = new Date().toISOString();
     const rows = SETTING_KEYS.map(key => ({
+      id: uuid(),
       key: `site_settings:${key}`,
       value: cleanValue(data[key] || DEFAULT_SETTINGS[key] || '').slice(0, 255),
+      updated_at: now,
     }));
+    // The settings table has a NOT NULL constraint on `id`, so we must
+    // generate UUIDs. `onConflict: 'key'` handles updates when the row
+    // already exists (matched by unique constraint on `key`).
     const { error } = await client.from('settings').upsert(rows, { onConflict: 'key' });
     if (error) {
       console.error('saveSiteSettings Supabase error:', error);

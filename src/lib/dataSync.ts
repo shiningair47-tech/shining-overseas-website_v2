@@ -183,15 +183,15 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
       
       if (value.length <= CHUNK_SIZE) {
         // Small value — store as a single row
-        const { error: upsErr } = await c.from('settings').upsert({ key: prefix, value }, { onConflict: 'key' });
+        const { error: upsErr } = await c.from('settings').upsert({ id: uuid(), key: prefix, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
         if (upsErr) return false;
       } else {
         // Large value — split into chunks to avoid column size limits
-        const rows: { key: string; value: string }[] = [];
+        const rows: { id: string; key: string; value: string }[] = [];
         for (let i = 0; i < value.length; i += CHUNK_SIZE) {
-          rows.push({ key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
+          rows.push({ id: uuid(), key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
         }
-        rows.push({ key: `${prefix}:count`, value: String(rows.length) });
+        rows.push({ id: uuid(), key: `${prefix}:count`, value: String(rows.length) });
         const { error: insErr } = await c.from('settings').insert(rows);
         if (insErr) return false;
       }

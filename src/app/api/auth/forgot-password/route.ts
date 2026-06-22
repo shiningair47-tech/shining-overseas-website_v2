@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { NextResponse } from 'next/server';
 import { fetchUserByEmail } from '@/lib/auth';
 import { getSupabaseClient } from '@/lib/supabase';
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
         });
 
         await client.from('settings').upsert(
-          { key: requestKey, value: requestValue },
+          { id: uuid(), key: requestKey, value: requestValue, updated_at: new Date().toISOString() },
           { onConflict: 'key' }
         );
       }
