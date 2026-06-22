@@ -88,7 +88,13 @@ export async function saveSiteSettings(data: Record<string, string>): Promise<bo
       value: cleanValue(data[key] || DEFAULT_SETTINGS[key] || '').slice(0, 255),
     }));
     const { error } = await client.from('settings').upsert(rows, { onConflict: 'key' });
-    if (error) return false;
+    if (error) {
+      console.error('saveSiteSettings Supabase error:', error);
+      return false;
+    }
     return true;
-  } catch { return false; }
+  } catch (e) {
+    console.error('saveSiteSettings exception:', e);
+    return false;
+  }
 }
