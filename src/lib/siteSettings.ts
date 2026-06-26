@@ -82,7 +82,7 @@ export async function saveSiteSettings(data: Record<string, string>): Promise<bo
   // Use the admin (service_role) client that bypasses RLS — the settings
   // table has RLS enabled and the anon key has no write permission.
   const client = getSupabaseAdminClient();
-  if (!client) return false;
+  if (!client) { console.error('[saveSiteSettings] admin client is null - SUPABASE_SERVICE_KEY not set'); return false; }
   try {
     const now = new Date().toISOString();
     const rows = SETTING_KEYS.map(key => ({

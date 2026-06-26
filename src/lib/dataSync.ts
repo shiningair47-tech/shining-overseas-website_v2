@@ -170,37 +170,31 @@ export async function loadProfileMetadata(userId: string) {
 // The settings.value column is varchar(255) — chunks must fit within that limit
 const CHUNK_SIZE = 240;
 
-export async function saveProfileMetadata(userId: string, data: Record<string, string>): Promise<boolean> {
+export async function saveProfileMetadata(userId: string, data: Record<string, string>): Promise<void> {
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
   const c = getSupabaseAdminClient();
-  if (!c) { console.error('[saveProfileMetadata] admin client is null - SUPABASE_SERVICE_KEY not set'); return false; }
-  try {
-    for (const f of fields) {
-      const value = data[f] || '';
-      if (!value) continue; // skip empty fields
-      const prefix = `digital_profile:${userId}:${f}`;
-      
-      // Delete old rows for this field
-      const { error: delErr } = await c.from('settings').delete().like('key', `${prefix}%`);
-      if (delErr) { console.error(`[saveProfileMetadata] delete error for ${f}:`, delErr.message); return false; }
-      
-      if (value.length <= CHUNK_SIZE) {
-        // Small value — store as a single row
-        const { error: upsErr } = await c.from('settings').upsert({ id: uuid(), key: prefix, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-        if (upsErr) { console.error(`[saveProfileMetadata] upsert error for ${f}:`, upsErr.message); return false; }
-      } else {
-        // Large value — split into chunks
-        const rows: { id: string; key: string; value: string }[] = [];
-        for (let i = 0; i < value.length; i += CHUNK_SIZE) {
-          rows.push({ id: uuid(), key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
-        }
-        rows.push({ id: uuid(), key: `${prefix}:count`, value: String(rows.length) });
-        const { error: insErr } = await c.from('settings').insert(rows);
-        if (insErr) { console.error(`[saveProfileMetadata] insert error for ${f}:`, insErr.message); return false; }
+  if (!c) throw new Error('Server configuration error: SUPABASE_SERVICE_KEY not set.');
+  for (const f of fields) {
+    const value = data[f] || '';
+    if (!value) continue;
+    const prefix = `digital_profile:${userId}:${f}`;
+    
+    const { error: delErr } = await c.from('settings').delete().like('key', `${prefix}%`);
+    if (delErr) throw new Error(`Database error deleting old ${f}: ${delErr.message}`);
+    
+    if (value.length <= CHUNK_SIZE) {
+      const { error: upsErr } = await c.from('settings').upsert({ id: uuid(), key: prefix, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+      if (upsErr) throw new Error(`Database error saving ${f}: ${upsErr.message}`);
+    } else {
+      const rows: { id: string; key: string; value: string }[] = [];
+      for (let i = 0; i < value.length; i += CHUNK_SIZE) {
+        rows.push({ id: uuid(), key: `${prefix}:${rows.length}`, value: value.slice(i, i + CHUNK_SIZE) });
       }
+      rows.push({ id: uuid(), key: `${prefix}:count`, value: String(rows.length) });
+      const { error: insErr } = await c.from('settings').insert(rows);
+      if (insErr) throw new Error(`Database error saving ${f} chunks: ${insErr.message}`);
     }
-    return true;
-  } catch (e) { console.error('[saveProfileMetadata] exception:', e); return false; }
+  }
 }
 
 export function whatsappDigits(v: string): string {
