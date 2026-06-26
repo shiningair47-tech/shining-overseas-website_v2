@@ -200,7 +200,7 @@ export default function BuilderPage() {
               <div>
                 <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 2 â€” Profile Photo</div>
                 <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500, marginBottom: 32, lineHeight: 1.6 }}>Upload a clear, professional photo. Or paste an image URL.</p>
-                <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ position: 'absolute', left: '-9999px', opacity: 0, width: 0, height: 0 }} />
                 <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 28px', border: '1px solid rgba(0,13,16,0.2)', background: 'white', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#000d10', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 32 }}>
                   {uploadLoading ? <LoaderCircle size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={16} />}
                   {uploadedPhoto ? 'Change Photo' : 'Choose Photo'}
