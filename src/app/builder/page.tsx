@@ -108,7 +108,7 @@ export default function BuilderPage() {
         body: JSON.stringify({ action: 'save_profile', user_id: user.id, data: { photo_url: photoUrl, uploaded_photo: uploadedPhoto, whatsapp_1: wa1, whatsapp_2: wa2, whatsapp_3: wa3 } }),
       });
       const r2d = await r2.json();
-      if (!r2.ok || !r2d.ok) { setMsg('Failed to save profile. The photo may be too large - try a smaller image.'); setSaving(false); return; }
+      if (!r2.ok || !r2d.ok) { setMsg('Failed to save profile: ' + (r2d.error || 'Unknown error. Please try again.')); setSaving(false); return; }
       const updated = { ...user, full_name: fullName, phone_number: phone, facebook_page: facebook };
       localStorage.setItem('so_user', JSON.stringify(updated));
       setUser(updated); setSaved(true); setMsg('Your Digital ID has been published!');
@@ -138,21 +138,21 @@ export default function BuilderPage() {
               <span style={{ fontWeight: 300, color: '#000d10', letterSpacing: '0.2em', fontSize: 11, marginLeft: 4 }}>OVERSEAS</span>
             </div>
           </a>
-          <a href="/portal" style={{ fontSize: 12, color: '#8e8e95', fontWeight: 600, textDecoration: 'none', letterSpacing: '0.1em' }}>← Back to Portal</a>
+          <a href="/portal" style={{ fontSize: 12, color: '#8e8e95', fontWeight: 600, textDecoration: 'none', letterSpacing: '0.1em' }}>â† Back to Portal</a>
         </div>
       </header>
 
       <section style={{ background: '#0f0f1c' }}>
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '64px 24px 80px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', marginBottom: 32 }}>
-            <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>●</span>
+            <span style={{ color: '#bc7155', marginRight: 8, fontSize: 8 }}>â—</span>
             <span style={{ fontSize: 11, letterSpacing: '0.25em', color: 'white', fontWeight: 700 }}>DIGITAL ID BUILDER</span>
           </div>
           <h1 style={{ fontSize: 'clamp(32px, 5vw, 64px)', fontWeight: 700, color: 'white', lineHeight: 1.05, letterSpacing: '-0.03em' }}>
             Build your<br /><span style={{ color: '#bc7155' }}>Digital ID page.</span>
           </h1>
           <p style={{ fontSize: 'clamp(14px, 1.5vw, 18px)', color: '#d5d3d4', marginTop: 24, maxWidth: 480, lineHeight: 1.6, fontWeight: 500 }}>
-            Your personal page for leads to contact you directly. Share your link — any enquiry goes straight to you.
+            Your personal page for leads to contact you directly. Share your link â€” any enquiry goes straight to you.
           </p>
         </div>
       </section>
@@ -179,7 +179,7 @@ export default function BuilderPage() {
             {/* STEP 0: Profile Info */}
             {step === 0 && (
               <div>
-                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 1 — Profile Info</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 1 â€” Profile Info</div>
                 <div style={{ marginBottom: 28 }}>
                   <label style={labelStyle}>Full Name</label>
                   <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" style={inputStyle} />
@@ -198,7 +198,7 @@ export default function BuilderPage() {
             {/* STEP 1: Photo */}
             {step === 1 && (
               <div>
-                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 2 — Profile Photo</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 2 â€” Profile Photo</div>
                 <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500, marginBottom: 32, lineHeight: 1.6 }}>Upload a clear, professional photo. Or paste an image URL.</p>
                 <input ref={fileRef} type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                 <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 28px', border: '1px solid rgba(0,13,16,0.2)', background: 'white', borderRadius: 9999, cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#000d10', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 32 }}>
@@ -215,7 +215,7 @@ export default function BuilderPage() {
             {/* STEP 2: WhatsApp */}
             {step === 2 && (
               <div>
-                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 3 — WhatsApp Numbers</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 3 â€” WhatsApp Numbers</div>
                 <p style={{ fontSize: 14, color: '#8e8e95', fontWeight: 500, marginBottom: 32, lineHeight: 1.6 }}>Up to 3 WhatsApp numbers shown as click-to-chat buttons. Include country code (e.g. 8801XXXXXXXXX).</p>
                 <div style={{ marginBottom: 28 }}>
                   <label style={labelStyle}>Primary WhatsApp</label>
@@ -235,15 +235,15 @@ export default function BuilderPage() {
             {/* STEP 3: Review */}
             {step === 3 && (
               <div>
-                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 4 — Review & Publish</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.25em', color: '#000d10', fontWeight: 700, textTransform: 'uppercase', marginBottom: 32 }}>Step 4 â€” Review & Publish</div>
                 <div style={{ background: '#f8f8f9', padding: 24, marginBottom: 32 }}>
                   {([
                     ['Name', fullName || user.full_name],
                     ['Phone', phone || user.phone_number],
-                    ['Facebook', facebook || user.facebook_page || '—'],
-                    ['Primary WhatsApp', wa1 || '—'],
-                    ['Photo', previewPhoto ? 'Uploaded ✓' : 'No photo'],
-                    ['Your Page URL', publicLink || '—'],
+                    ['Facebook', facebook || user.facebook_page || 'â€”'],
+                    ['Primary WhatsApp', wa1 || 'â€”'],
+                    ['Photo', previewPhoto ? 'Uploaded âœ“' : 'No photo'],
+                    ['Your Page URL', publicLink || 'â€”'],
                   ] as [string, string][]).map(([label, val]) => (
                     <div key={label} style={{ display: 'flex', gap: 16, padding: '12px 0', borderTop: '1px solid rgba(0,13,16,0.07)' }}>
                       <div style={{ fontSize: 11, letterSpacing: '0.15em', color: '#8e8e95', fontWeight: 700, textTransform: 'uppercase', width: 120, flexShrink: 0 }}>{label}</div>
@@ -295,7 +295,7 @@ export default function BuilderPage() {
                 </div>
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: 'white', letterSpacing: '-0.02em', marginBottom: 6 }}>{fullName || user.full_name}</div>
-                  <div style={{ fontSize: 12, color: '#d5d3d4', fontWeight: 500 }}>{user.role === 'TEAM_MEMBER' ? 'Staff Representative' : 'Brand Ambassador'} · Shining Overseas</div>
+                  <div style={{ fontSize: 12, color: '#d5d3d4', fontWeight: 500 }}>{user.role === 'TEAM_MEMBER' ? 'Staff Representative' : 'Brand Ambassador'} Â· Shining Overseas</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>

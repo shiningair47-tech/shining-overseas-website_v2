@@ -18,7 +18,8 @@ export async function POST(req: Request) {
   if (action === 'save_profile') {
     try {
       const ok = await saveProfileMetadata(body.user_id, body.data);
-      return NextResponse.json({ ok });
+      if (!ok) { return NextResponse.json({ ok: false, error: 'Server error saving profile metadata.' }); }
+      return NextResponse.json({ ok: true });
     } catch (e: unknown) {
       console.error('[digital-id POST] exception:', e);
       return NextResponse.json({ ok: false, error: String(e) });
