@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { listDigitalIdPages, loadProfileMetadata, saveProfileMetadata } from '@/lib/dataSync';
-import { getSupabaseClient } from '@/lib/supabase';
+import { getSupabaseAdminClient } from '@/lib/supabase';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
   }
   if (action === 'update_user') {
-    const c = getSupabaseClient();
+    const c = getSupabaseAdminClient();
     if (!c) return NextResponse.json({ ok: false });
     try {
       await c.from('users').update({
@@ -35,14 +35,14 @@ export async function POST(req: Request) {
     } catch { return NextResponse.json({ ok: false }); }
   }
   if (action === 'toggle_active') {
-    const c = getSupabaseClient(); if (!c) return NextResponse.json({ ok: false });
+    const c = getSupabaseAdminClient(); if (!c) return NextResponse.json({ ok: false });
     try {
       await c.from('users').update({ status: body.value ? 'ACTIVE' : 'INACTIVE' }).eq('id', body.id);
       return NextResponse.json({ ok: true });
     } catch { return NextResponse.json({ ok: false }); }
   }
   if (action === 'delete_page') {
-    const c = getSupabaseClient(); if (!c) return NextResponse.json({ ok: false });
+    const c = getSupabaseAdminClient(); if (!c) return NextResponse.json({ ok: false });
     try {
       await c.from('users').update({ referral_code: null }).eq('id', body.id);
       return NextResponse.json({ ok: true });

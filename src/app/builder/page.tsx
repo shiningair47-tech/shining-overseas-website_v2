@@ -102,7 +102,8 @@ export default function BuilderPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_user', user_id: user.id, full_name: fullName, phone_number: phone, facebook_page: facebook }),
       });
-      if (!r1.ok) { setMsg('Failed to update user info.'); setSaving(false); return; }
+      const r1d = await r1.json();
+      if (!r1d.ok) { setMsg('Failed to update user info.'); setSaving(false); return; }
       const r2 = await fetch('/api/digital-id', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'save_profile', user_id: user.id, data: { photo_url: photoUrl, uploaded_photo: uploadedPhoto, whatsapp_1: wa1, whatsapp_2: wa2, whatsapp_3: wa3 } }),

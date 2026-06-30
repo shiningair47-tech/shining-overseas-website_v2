@@ -129,7 +129,8 @@ export async function deleteAccount(userId: string): Promise<[boolean, string]> 
 export async function loadProfileMetadata(userId: string) {
   const fields = ['photo_url', 'uploaded_photo', 'whatsapp_1', 'whatsapp_2', 'whatsapp_3'];
   const out: Record<string, string> = { photo_url: '', uploaded_photo: '', whatsapp_1: '', whatsapp_2: '', whatsapp_3: '' };
-  const c = getSupabaseClient(); if (!c) return out;
+  // Use admin client to bypass RLS - saveProfileMetadata writes with service_role key
+  const c = getSupabaseAdminClient(); if (!c) return out;
   try {
     // Load ALL settings keys for this user at once
     const prefix = `digital_profile:${userId}:`;
@@ -176,11 +177,11 @@ export async function saveProfileMetadata(userId: string, data: Record<string, s
   if (!c) throw new Error('Server configuration error: SUPABASE_SERVICE_KEY not set.');
   for (const f of fields) {
     const value = data[f] || '';
-    if (!value) continue;
     const prefix = `digital_profile:${userId}:${f}`;
-    
+    // Always delete old values first, even when clearing a field
     const { error: delErr } = await c.from('settings').delete().like('key', `${prefix}%`);
     if (delErr) throw new Error(`Database error deleting old ${f}: ${delErr.message}`);
+    if (!value) continue;
     
     if (value.length <= CHUNK_SIZE) {
       const { error: upsErr } = await c.from('settings').upsert({ id: uuid(), key: prefix, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
